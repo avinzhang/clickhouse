@@ -1,0 +1,131 @@
+---
+version: '3.8'
+networks:
+  example.com:
+    name: "example.com"
+    driver: bridge
+services:
+  keeper01:
+    image: clickhouse/clickhouse-keeper:latest
+    ports:
+      - "9181:9181"
+    container_name: keeper01
+    hostname: keeper01
+    networks:
+      example.com: {}
+    volumes:
+      - ./config/keeper01.xml:/etc/clickhouse-keeper/keeper_config.xml
+      - ./data/keeper01:/var/lib/clickhouse
+
+  keeper02:
+    image: clickhouse/clickhouse-keeper:latest
+    ports:
+      - "9182:9181"
+    container_name: keeper02
+    hostname: keeper02
+    networks:
+      example.com: {}
+    volumes:
+      - ./config/keeper02.xml:/etc/clickhouse-keeper/keeper_config.xml
+      - ./data/keeper02:/var/lib/clickhouse
+
+  keeper03:
+    image: clickhouse/clickhouse-keeper:latest
+    ports:
+      - "9183:9181"
+    container_name: keeper03
+    hostname: keeper03
+    networks:
+      example.com: {}
+    volumes:
+      - ./config/keeper03.xml:/etc/clickhouse-keeper/keeper_config.xml
+      - ./data/keeper03:/var/lib/clickhouse
+
+  clickhouse01:
+    image: clickhouse/clickhouse-server:latest
+    hostname: clickhouse01
+    container_name: clickhouse01
+    cpus: 0.7
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    depends_on:
+    - "keeper01"
+    - "keeper02"
+    - "keeper03"
+    ports:
+      - "9001:9000"
+    networks:
+      example.com: {}
+    volumes:
+      - ./config/config01.xml:/etc/clickhouse-server/config.d/config.xml
+      - ./config/users.xml:/etc/clickhouse-server/users.xml
+      - ./data/clickhouse01:/var/lib/clickhouse
+
+  clickhouse02:
+    image: clickhouse/clickhouse-server:latest
+    hostname: clickhouse02
+    container_name: clickhouse02
+    cpus: 0.7
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    depends_on:
+    - "keeper01"
+    - "keeper02"
+    - "keeper03"
+    ports:
+      - "9002:9000"
+    networks:
+      example.com: {}
+    volumes:
+      - ./config/config02.xml:/etc/clickhouse-server/config.d/config.xml
+      - ./config/users.xml:/etc/clickhouse-server/users.xml
+      - ./data/clickhouse02:/var/lib/clickhouse
+
+  clickhouse03:
+    image: clickhouse/clickhouse-server:latest
+    hostname: clickhouse03
+    container_name: clickhouse03
+    cpus: 0.7
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    depends_on:
+    - "keeper01"
+    - "keeper02"
+    - "keeper03"
+    ports:
+      - "9003:9000"
+    networks:
+      example.com: {}
+    volumes:
+      - ./config/config03.xml:/etc/clickhouse-server/config.d/config.xml
+      - ./config/users.xml:/etc/clickhouse-server/users.xml
+      - ./data/clickhouse03:/var/lib/clickhouse
+
+  clickhouse04:
+    image: clickhouse/clickhouse-server:latest
+    hostname: clickhouse04
+    container_name: clickhouse04
+    cpus: 0.7
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    depends_on:
+    - "keeper01"
+    - "keeper02"
+    - "keeper03"
+    ports:
+      - "9004:9000"
+    networks:
+      example.com: {}
+    volumes:
+      - ./config/config04.xml:/etc/clickhouse-server/config.d/config.xml
+      - ./config/users.xml:/etc/clickhouse-server/users.xml
+      - ./data/clickhouse04:/var/lib/clickhouse
+
