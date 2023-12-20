@@ -1,5 +1,5 @@
 ---
-version: '3.5'
+version: '3.8'
 networks:
   example.com:
     name: "example.com"
@@ -9,31 +9,37 @@ services:
     image: clickhouse/clickhouse-keeper:latest
     ports:
       - "9181:9181"
-      - "9182:9182"
     container_name: keeper01
     hostname: keeper01
     networks:
       example.com: {}
     volumes:
       - ./config/keeper01.xml:/etc/clickhouse-keeper/keeper_config.xml
+      - ./data/keeper01:/var/lib/clickhouse
 
   keeper02:
     image: clickhouse/clickhouse-keeper:latest
+    ports:
+      - "9182:9181"
     container_name: keeper02
     hostname: keeper02
     networks:
       example.com: {}
     volumes:
       - ./config/keeper02.xml:/etc/clickhouse-keeper/keeper_config.xml
+      - ./data/keeper02:/var/lib/clickhouse
 
   keeper03:
     image: clickhouse/clickhouse-keeper:latest
+    ports:
+      - "9183:9181"
     container_name: keeper03
     hostname: keeper03
     networks:
       example.com: {}
     volumes:
       - ./config/keeper03.xml:/etc/clickhouse-keeper/keeper_config.xml
+      - ./data/keeper03:/var/lib/clickhouse
 
   clickhouse01:
     image: clickhouse/clickhouse-server:latest
@@ -53,8 +59,9 @@ services:
     networks:
       example.com: {}
     volumes:
-      - ./config/config01.xml:/etc/clickhouse-server/config.xml
+      - ./config/config01.xml:/etc/clickhouse-server/config.d/config.xml
       - ./config/users.xml:/etc/clickhouse-server/users.xml
+      - ./data/clickhouse01:/var/lib/clickhouse
 
   clickhouse02:
     image: clickhouse/clickhouse-server:latest
@@ -74,8 +81,9 @@ services:
     networks:
       example.com: {}
     volumes:
-      - ./config/config02.xml:/etc/clickhouse-server/config.xml
+      - ./config/config02.xml:/etc/clickhouse-server/config.d/config.xml
       - ./config/users.xml:/etc/clickhouse-server/users.xml
+      - ./data/clickhouse02:/var/lib/clickhouse
 
   clickhouse03:
     image: clickhouse/clickhouse-server:latest
@@ -95,8 +103,9 @@ services:
     networks:
       example.com: {}
     volumes:
-      - ./config/config03.xml:/etc/clickhouse-server/config.xml
+      - ./config/config03.xml:/etc/clickhouse-server/config.d/config.xml
       - ./config/users.xml:/etc/clickhouse-server/users.xml
+      - ./data/clickhouse03:/var/lib/clickhouse
 
   clickhouse04:
     image: clickhouse/clickhouse-server:latest
@@ -116,8 +125,9 @@ services:
     networks:
       example.com: {}
     volumes:
-      - ./config/config04.xml:/etc/clickhouse-server/config.xml
+      - ./config/config04.xml:/etc/clickhouse-server/config.d/config.xml
       - ./config/users.xml:/etc/clickhouse-server/users.xml
+      - ./data/clickhouse04:/var/lib/clickhouse
 
   clickhouse05:
     image: clickhouse/clickhouse-server:latest
@@ -137,8 +147,9 @@ services:
     networks:
       example.com: {}
     volumes:
-      - ./config/config05.xml:/etc/clickhouse-server/config.xml
+      - ./config/config05.xml:/etc/clickhouse-server/config.d/config.xml
       - ./config/users.xml:/etc/clickhouse-server/users.xml
+      - ./data/clickhouse05:/var/lib/clickhouse
 
   clickhouse06:
     image: clickhouse/clickhouse-server:latest
@@ -158,5 +169,6 @@ services:
     networks:
       example.com: {}
     volumes:
-      - ./config/config06.xml:/etc/clickhouse-server/config.xml
+      - ./config/config06.xml:/etc/clickhouse-server/config.d/config.xml
       - ./config/users.xml:/etc/clickhouse-server/users.xml
+      - ./data/clickhouse06:/var/lib/clickhouse

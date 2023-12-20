@@ -1,42 +1,30 @@
-<?xml version="1.0"?>
-<clickhouse>
+<clickhouse replace="true">
     <logger>
         <level>debug</level>
-        <console>true</console>
-        <log remove="remove"/>
-        <errorlog remove="remove"/>
+        <log>/var/log/clickhouse-server/clickhouse-server.log</log>
+        <errorlog>/var/log/clickhouse-server/clickhouse-server.err.log</errorlog>
+        <size>1000M</size>
+        <count>3</count>
     </logger>
-
-    <query_log>
-        <database>system</database>
-        <table>query_log</table>
-    </query_log>
-
+    <display_name>clickhouse04</display_name>
     <listen_host>0.0.0.0</listen_host>
     <http_port>8123</http_port>
     <tcp_port>9000</tcp_port>
-    <interserver_http_host>clickhouse06</interserver_http_host>
-    <interserver_http_port>9009</interserver_http_port>
-
-    <max_connections>4096</max_connections>
-    <keep_alive_timeout>3</keep_alive_timeout>
-    <max_concurrent_queries>100</max_concurrent_queries>
-    <uncompressed_cache_size>8589934592</uncompressed_cache_size>
-    <mark_cache_size>5368709120</mark_cache_size>
-
-    <path>/var/lib/clickhouse/</path>
-    <tmp_path>/var/lib/clickhouse/tmp/</tmp_path>
-    <user_files_path>/var/lib/clickhouse/user_files/</user_files_path>
-
-    <users_config>users.xml</users_config>
-    <default_profile>default</default_profile>
-    <default_database>default</default_database>
-    <timezone>Australia/Brisbane</timezone>
-    <mlock_executable>false</mlock_executable>
-
+    <user_directories>
+        <users_xml>
+            <path>users.xml</path>
+        </users_xml>
+        <local_directory>
+            <path>/var/lib/clickhouse/access/</path>
+        </local_directory>
+    </user_directories>
+    <distributed_ddl>
+        <path>/clickhouse/task_queue/ddl</path>
+    </distributed_ddl>
     <remote_servers>
-        <cluster_2S_2R>
+        <cluster_2S_3R>
             <shard>
+                <internal_replication>true</internal_replication>
                 <replica>
                     <host>clickhouse01</host>
                     <port>9000</port>
@@ -51,6 +39,7 @@
                 </replica>
             </shard>
             <shard>
+                <internal_replication>true</internal_replication>
                 <replica>
                     <host>clickhouse04</host>
                     <port>9000</port>
@@ -64,9 +53,8 @@
                     <port>9000</port>
                 </replica>
             </shard>
-        </cluster_2S_2R>
+        </cluster_2S_3R>
     </remote_servers>
-
     <zookeeper>
         <node>
             <host>keeper01</host>
@@ -81,10 +69,8 @@
             <port>9181</port>
         </node>
     </zookeeper>
-
-    <distributed_ddl>
-        <path>/clickhouse/task_queue/ddl</path>
-    </distributed_ddl>
-
-    <format_schema_path>/var/lib/clickhouse/format_schemas/</format_schema_path>
+    <macros>
+        <shard>02</shard>
+        <replica>01</replica>
+    </macros>
 </clickhouse>
