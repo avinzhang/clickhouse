@@ -21,11 +21,12 @@ services:
     networks:
       example.com: {}
     volumes:
-      - ./config/clickhouse01/config.d:/etc/clickhouse-server/config.d
-      - ./config/users.xml:/etc/clickhouse-server/users.d/users.xml
+      - ./config/clickhouse01/config01.xml:/etc/clickhouse-server/config.xml
+      - ./config/users.xml:/etc/clickhouse-server/users.xml
       - ./data/clickhouse01:/var/lib/clickhouse
       - ./certs:/etc/clickhouse-server/certs
       - ./log/clickhouse01:/var/log/clickhouse-server
+      - ./config/client.xml:/etc/clickhouse-client/config.xml
 
   clickhouse02:
     image: clickhouse/clickhouse-server:23.3.2.37-alpine
@@ -42,11 +43,12 @@ services:
     networks:
       example.com: {}
     volumes:
-      - ./config/clickhouse02/config.d:/etc/clickhouse-server/config.d
-      - ./config/users.xml:/etc/clickhouse-server/users.d/users.xml
+      - ./config/clickhouse02/config02.xml:/etc/clickhouse-server/config.xml
+      - ./config/users.xml:/etc/clickhouse-server/users.xml
       - ./data/clickhouse02:/var/lib/clickhouse
       - ./certs:/etc/clickhouse-server/certs
       - ./log/clickhouse02:/var/log/clickhouse-server
+      - ./config/client.xml:/etc/clickhouse-client/config.xml
 
   clickhouse03:
     image: clickhouse/clickhouse-server:23.3.2.37-alpine
@@ -63,11 +65,12 @@ services:
     networks:
       example.com: {}
     volumes:
-      - ./config/clickhouse03/config.d:/etc/clickhouse-server/config.d
-      - ./config/users.xml:/etc/clickhouse-server/users.d/users.xml
+      - ./config/clickhouse03/config03.xml:/etc/clickhouse-server/config.xml
+      - ./config/users.xml:/etc/clickhouse-server/users.xml
       - ./data/clickhouse03:/var/lib/clickhouse
       - ./certs:/etc/clickhouse-server/certs
       - ./log/clickhouse03:/var/log/clickhouse-server
+      - ./config/client.xml:/etc/clickhouse-client/config.xml
 
   clickhouse04:
     image: clickhouse/clickhouse-server:23.3.2.37-alpine
@@ -84,9 +87,10 @@ services:
     networks:
       example.com: {}
     volumes:
-      - ./config/clickhouse04/config.d:/etc/clickhouse-server/config.d
-      - ./config/users.xml:/etc/clickhouse-server/users.d/users.xml
+      - ./config/clickhouse04/config04.xml:/etc/clickhouse-server/config.xml
+      - ./config/users.xml:/etc/clickhouse-server/users.xml
       - ./data/clickhouse04:/var/lib/clickhouse
       - ./certs:/etc/clickhouse-server/certs
       - ./log/clickhouse04:/var/log/clickhouse-server
+      - ./config/client.xml:/etc/clickhouse-client/config.xml
 

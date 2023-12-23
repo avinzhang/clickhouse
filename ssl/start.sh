@@ -8,21 +8,21 @@ while [ $shard_id -le 2 ]
 do
   while [ $replica_id -le 2 ]
   do
-     mkdir -p ./config/clickhouse0${node}/config.d
-     node=$node replica_id=$replica_id shard_id=$shard_id envsubst < ./config/config.xml > ./config/clickhouse0${node}/config.d/config0${node}.xml
+     mkdir -p ./config/clickhouse0${node}/
+     node=$node replica_id=$replica_id shard_id=$shard_id envsubst < ./config/config.xml > ./config/clickhouse0${node}/config0${node}.xml
      node=$((node+1))
      replica_id=$((replica_id+1))
   done
   shard_id=$((shard_id+1))
   replica_id=1
 done
-echo "* Generate keeper configs"
-node=1
-while [ $node -le 3 ]
-do
-  node=$node envsubst < ./config/keeper.xml > ./config/clickhouse0${node}/config.d/keeper0${node}.xml
-  node=$((node+1))
-done
+#echo "* Generate keeper configs"
+#node=1
+#while [ $node -le 3 ]
+#do
+#  node=$node envsubst < ./config/keeper.xml > ./config/clickhouse0${node}/config.d/keeper0${node}.xml
+#  node=$((node+1))
+#done
 echo
 
 echo "Start the cluster"

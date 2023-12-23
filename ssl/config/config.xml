@@ -1,22 +1,23 @@
-<clickhouse replace="replace">
+<clickhouse>
     <logger>
-        <level>information</level>
+        <level>trace</level>
         <log>/var/log/clickhouse-server/clickhouse-server.log</log>
         <errorlog>/var/log/clickhouse-server/clickhouse-server.err.log</errorlog>
         <size>1000M</size>
         <count>3</count>
     </logger>
+
+    <path>/var/lib/clickhouse/</path>
+    <tmp_path>/var/lib/clickhouse/tmp/</tmp_path>
+    <user_files_path>/var/lib/clickhouse/user_files/</user_files_path>
+    <format_schema_path>/var/lib/clickhouse/format_schemas/</format_schema_path>
+
     <display_name>clickhouse0${node}</display_name>
     <listen_host>0.0.0.0</listen_host>
-    <http_port remove="remove"/>
-    <tcp_port remove="remove"/>
-    <mysql_port remove="remove"/>
-    <postgresql_port remove="remove"/>
-    <http_port remove="remove"/>
-    <http_port remove="remove"/>
     <https_port>8443</https_port>
     <tcp_port_secure>9440</tcp_port_secure>
-    <interserver_https_port>9009</interserver_https_port>
+    <interserver_https_host>clickhouse0${node}</interserver_https_host>
+    <interserver_https_port>9010</interserver_https_port>
     <user_directories>
         <users_xml>
             <path>users.xml</path>
@@ -28,6 +29,40 @@
     <distributed_ddl>
         <path>/clickhouse/task_queue/ddl</path>
     </distributed_ddl>
+    <keeper_server>
+        <tcp_port_secure>9281</tcp_port_secure>
+        <server_id>${node}</server_id>
+        <log_storage_path>/var/lib/clickhouse/coordination/logs</log_storage_path>
+        <snapshot_storage_path>/var/lib/clickhouse/coordination/snapshots</snapshot_storage_path>
+        <coordination_settings>
+            <operation_timeout_ms>10000</operation_timeout_ms>
+            <session_timeout_ms>100000</session_timeout_ms>
+            <raft_logs_level>trace</raft_logs_level>
+        </coordination_settings>
+        <raft_configuration>
+            <secure>true</secure>
+            <server>
+                <id>1</id>
+                <hostname>clickhouse01</hostname>
+                <port>9444</port>
+            </server>
+            <server>
+                <id>2</id>
+                <hostname>clickhouse02</hostname>
+                <port>9444</port>
+            </server>
+            <server>
+                <id>3</id>
+                <hostname>clickhouse03</hostname>
+                <port>9444</port>
+            </server>
+            <server>
+                <id>4</id>
+                <hostname>clickhouse04</hostname>
+                <port>9444</port>
+            </server>
+        </raft_configuration>
+    </keeper_server>
     <remote_servers>
         <cluster_2S_2R>
             <shard>
@@ -61,17 +96,22 @@
     <zookeeper>
         <node>
             <host>clickhouse01</host>
-            <port>9181</port>
+            <port>9281</port>
             <secure>1</secure>
         </node>
         <node>
             <host>clickhouse02</host>
-            <port>9181</port>
+            <port>9281</port>
             <secure>1</secure>
         </node>
         <node>
             <host>clickhouse03</host>
-            <port>9181</port>
+            <port>9281</port>
+            <secure>1</secure>
+        </node>
+        <node>
+            <host>clickhouse04</host>
+            <port>9281</port>
             <secure>1</secure>
         </node>
     </zookeeper>
@@ -79,7 +119,7 @@
         <shard>0${shard_id}</shard>
         <replica>0${replica_id}</replica>
     </macros>
-    <openSSL replace="replace">
+    <openSSL>
       <server>
           <certificateFile>/etc/clickhouse-server/certs/clickhouse0${node}.crt</certificateFile>
           <privateKeyFile>/etc/clickhouse-server/certs/clickhouse0${node}.key</privateKeyFile>
@@ -95,13 +135,13 @@
           <cacheSessions>true</cacheSessions>
           <disableProtocols>sslv2,sslv3</disableProtocols>
           <preferServerCiphers>true</preferServerCiphers>
-          <verificationMode>relaxed</verificationMode>
+          <verificationMode>none</verificationMode>
           <invalidCertificateHandler>
               <name>RejectCertificateHandler</name>
           </invalidCertificateHandler>
       </client>
     </openSSL>
-    <grpc replace="replace">
+    <grpc>
         <enable_ssl>1</enable_ssl>
         <ssl_cert_file>/etc/clickhouse-server/certs/clickhouse0${node}.crt</ssl_cert_file>
         <ssl_key_file>/etc/clickhouse-server/certs/clickhouse0${node}.key</ssl_key_file>
