@@ -72,15 +72,16 @@
                     <host>clickhouse01</host>
                     <port>9440</port>
                     <secure>1</secure>
-                    <user>default</user>
-                    <password>ClickHouse123!</password>
+                    <user>replica</user>
+                    <!-- password_sha256_hex is not supported here-->
+                    <password>replica</password>
                 </replica>
                 <replica>
                     <host>clickhouse02</host>
                     <port>9440</port>
                     <secure>1</secure>
-                    <user>default</user>
-                    <password>ClickHouse123!</password>
+                    <user>replica</user>
+                    <password>replica</password>
                 </replica>
             </shard>
             <shard>
@@ -89,15 +90,15 @@
                     <host>clickhouse03</host>
                     <port>9440</port>
                     <secure>1</secure>
-                    <user>default</user>
-                    <password>ClickHouse123!</password>
+                    <user>replica</user>
+                    <password>replica</password>
                 </replica>
                 <replica>
                     <host>clickhouse04</host>
                     <port>9440</port>
                     <secure>1</secure>
-                    <user>default</user>
-                    <password>ClickHouse123!</password>
+                    <user>replica</user>
+                    <password>replica</password>
                 </replica>
             </shard>
         </cluster_2S_2R>

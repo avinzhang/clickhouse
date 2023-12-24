@@ -12,7 +12,7 @@
     <users>
         <default>
             <access_management>1</access_management>
-            <password_sha256_hex>$defaultpass</password_sha256_hex>
+            <password_sha256_hex>6a94f7e4e1a160ce48a8f078b3d9a0d594fabf6e1ad038f48232545eb9179589</password_sha256_hex>
             <profile>default</profile>
             <quota>default</quota>
             <named_collection_control>1</named_collection_control>
