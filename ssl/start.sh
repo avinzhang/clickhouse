@@ -16,18 +16,9 @@ do
   shard_id=$((shard_id+1))
   replica_id=1
 done
-#echo "* Generate keeper configs"
-#node=1
-#while [ $node -le 3 ]
-#do
-#  node=$node envsubst < ./config/keeper.xml > ./config/clickhouse0${node}/config.d/keeper0${node}.xml
-#  node=$((node+1))
-#done
 echo
-
 echo "Start the cluster"
 docker-compose up -d
-exit
 sleep 5
 echo
 echo "* Check clickhouse system.zookeeper table"
@@ -35,17 +26,17 @@ docker exec -it clickhouse01 clickhouse-client --user default --password ClickHo
 select * from system.zookeeper 
 where path IN ('/', '/clickhouse')
 "
-exit
 echo
 echo
 echo "* Create database"
-docker exec -it clickhouse01 bash -c 'clickhouse-client -h localhost -q "CREATE DATABASE db1 ON CLUSTER 'cluster_2S_2R';"'
+docker exec -it clickhouse01 bash -c 'clickhouse-client --user default --password ClickHouse123! --port 9440 --secure -h localhost -q "CREATE DATABASE db1 ON CLUSTER 'cluster_2S_2R';"'
 echo
 echo
 echo "* List created shards and replicas"
-docker exec -it clickhouse01 bash -c 'clickhouse-client -h localhost -q "
+docker exec -it clickhouse01 bash -c 'clickhouse-client --user default --password ClickHouse123! --port 9440 --secure -h localhost -q "
 SELECT
     cluster,
+    host_name,
     shard_num,
     replica_num
 FROM system.clusters
@@ -54,9 +45,9 @@ ORDER BY
     shard_num ASC,
     replica_num ASC;
 "'
-
+echo
 echo "Create table on db1"
-docker exec -it clickhouse01 clickhouse-client -h localhost -q "
+docker exec -it clickhouse01 clickhouse-client --user default --password ClickHouse123! --port 9440 --secure -h localhost -q "
 CREATE TABLE db1.events on cluster 'cluster_2S_2R'
 (
     time DateTime,
@@ -68,17 +59,17 @@ PARTITION BY toDate(time)
 ORDER BY uid;
 "
 
-
+echo
 echo "Create distributed table to represent the data on the shards"
-docker exec -it clickhouse01 clickhouse-client -h localhost -q "
+docker exec -it clickhouse01 clickhouse-client --user default --password ClickHouse123! --port 9440 --secure -h localhost -q "
 CREATE TABLE db1.dist_table ON CLUSTER 'cluster_2S_2R'
   AS db1.events
   ENGINE = Distributed('cluster_2S_2R', db1, events, rand());
 "
 
-
-echo "Insert rows into table on node clickhouse01"
-docker exec -it clickhouse01 clickhouse-client -h localhost -q "
+echo
+echo "* Insert rows into table on node clickhouse01"
+docker exec -it clickhouse01 clickhouse-client --user default --password ClickHouse123! --port 9440 --secure -h localhost -q "
 INSERT INTO db1.dist_table VALUES
     ('2020-01-01 10:00:00', 100, 'view'),
     ('2020-01-01 10:05:00', 101, 'view'),
@@ -87,29 +78,31 @@ INSERT INTO db1.dist_table VALUES
     ('2020-01-02 08:10:00', 100, 'view'),
     ('2020-01-03 13:00:00', 103, 'view');
 "
-
-echo "Select data from clickhouse01"
-docker exec -it clickhouse01 clickhouse-client -h localhost -q "
+echo
+echo "* Select data from clickhouse01 - Shard1"
+docker exec -it clickhouse01 clickhouse-client --user default --password ClickHouse123! --port 9440 --secure -h localhost -q "
 select * from db1.events;
 "
 
-echo "Select rows from clickhouse02"
-docker exec -it clickhouse02 clickhouse-client -h localhost -q "
+echo "  Select rows from clickhouse02 - a replica of clickhouse01"
+docker exec -it clickhouse02 clickhouse-client --user default --password ClickHouse123! --port 9440 --secure -h localhost -q "
+select * from db1.events;
+"
+echo
+echo
+echo "* Select rows from clickhouse03 - shard2"
+docker exec -it clickhouse03 clickhouse-client --user default --password ClickHouse123! --port 9440 --secure -h localhost -q "
 select * from db1.events;
 "
 
-echo "Select rows from clickhouse03"
-docker exec -it clickhouse03 clickhouse-client -h localhost -q "
+echo "  Select rows from clickhouse04 - replica of clickhouse03"
+docker exec -it clickhouse04 clickhouse-client --user default --password ClickHouse123! --port 9440 --secure -h localhost -q "
 select * from db1.events;
 "
-
-echo "Select rows from clickhouse04"
-docker exec -it clickhouse04 clickhouse-client -h localhost -q "
-select * from db1.events;
-"
-
-echo "Read from distributed table"
-docker exec -it clickhouse01 clickhouse-client -h localhost -q "
+echo
+echo
+echo "* Read from distributed table"
+docker exec -it clickhouse01 clickhouse-client --user default --password ClickHouse123! --port 9440 --secure -h localhost -q "
 select * from db1.dist_table;
 "
 exit
