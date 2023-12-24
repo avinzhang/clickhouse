@@ -3,6 +3,14 @@
 #encrypt default user password"
 default_pass=`echo -n "ClickHouse123" | sha256sum | tr -d ' -'`
 echo "* Generate configs for clickhouse nodes"
+#for keepers
+node=1
+while [ $node -le 3 ]
+do
+  mkdir -p ./config/clickhouse0${node}
+  node=$node envsubst < ./config/keeper.xml > ./config/clickhouse0${node}/keeper.xml
+  node=$((node+1))
+done
 shard_id=1
 replica_id=1
 node=1
