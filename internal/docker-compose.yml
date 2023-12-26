@@ -17,6 +17,7 @@ services:
     ports:
       - "9001:9000"
       - "9181:9181"
+      - "8123:8123"
     networks:
       example.com: {}
     volumes:
