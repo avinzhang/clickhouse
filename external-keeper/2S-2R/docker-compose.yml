@@ -14,8 +14,9 @@ services:
     networks:
       example.com: {}
     volumes:
-      - ./config/keeper01.xml:/etc/clickhouse-keeper/keeper_config.xml
+      - ./config/keeper01/keeper.xml:/etc/clickhouse-keeper/keeper_config.xml
       - ./data/keeper01:/var/lib/clickhouse
+      - ./log/keeper01:/var/log/clickhouse-keeper
 
   keeper02:
     image: clickhouse/clickhouse-keeper:latest
@@ -26,8 +27,9 @@ services:
     networks:
       example.com: {}
     volumes:
-      - ./config/keeper02.xml:/etc/clickhouse-keeper/keeper_config.xml
+      - ./config/keeper02/keeper.xml:/etc/clickhouse-keeper/keeper_config.xml
       - ./data/keeper02:/var/lib/clickhouse
+      - ./log/keeper02:/var/log/clickhouse-keeper
 
   keeper03:
     image: clickhouse/clickhouse-keeper:latest
@@ -38,11 +40,12 @@ services:
     networks:
       example.com: {}
     volumes:
-      - ./config/keeper03.xml:/etc/clickhouse-keeper/keeper_config.xml
+      - ./config/keeper03/keeper.xml:/etc/clickhouse-keeper/keeper_config.xml
       - ./data/keeper03:/var/lib/clickhouse
+      - ./log/keeper03:/var/log/clickhouse-keeper
 
   clickhouse01:
-    image: clickhouse/clickhouse-server:latest
+    image: clickhouse/clickhouse-server:23.3.2.37-alpine
     hostname: clickhouse01
     container_name: clickhouse01
     cpus: 0.7
@@ -56,15 +59,17 @@ services:
     - "keeper03"
     ports:
       - "9001:9000"
+      - "8123:8123"
     networks:
       example.com: {}
     volumes:
-      - ./config/config01.xml:/etc/clickhouse-server/config.d/config.xml
-      - ./config/users.xml:/etc/clickhouse-server/users.xml
+      - ./config/clickhouse01/config.xml:/etc/clickhouse-server/config.d/config.xml
+      - ./config/users.xml:/etc/clickhouse-server/users.d/users.xml
       - ./data/clickhouse01:/var/lib/clickhouse
+      - ./log/clickhouse01:/var/log/clickhouse-server
 
   clickhouse02:
-    image: clickhouse/clickhouse-server:latest
+    image: clickhouse/clickhouse-server:23.3.2.37-alpine
     hostname: clickhouse02
     container_name: clickhouse02
     cpus: 0.7
@@ -81,12 +86,13 @@ services:
     networks:
       example.com: {}
     volumes:
-      - ./config/config02.xml:/etc/clickhouse-server/config.d/config.xml
-      - ./config/users.xml:/etc/clickhouse-server/users.xml
+      - ./config/clickhouse02/config.xml:/etc/clickhouse-server/config.d/config.xml
+      - ./config/users.xml:/etc/clickhouse-server/users.d/users.xml
       - ./data/clickhouse02:/var/lib/clickhouse
+      - ./log/clickhouse02:/var/log/clickhouse-server
 
   clickhouse03:
-    image: clickhouse/clickhouse-server:latest
+    image: clickhouse/clickhouse-server:23.3.2.37-alpine
     hostname: clickhouse03
     container_name: clickhouse03
     cpus: 0.7
@@ -103,12 +109,13 @@ services:
     networks:
       example.com: {}
     volumes:
-      - ./config/config03.xml:/etc/clickhouse-server/config.d/config.xml
-      - ./config/users.xml:/etc/clickhouse-server/users.xml
+      - ./config/clickhouse03/config.xml:/etc/clickhouse-server/config.d/config.xml
+      - ./config/users.xml:/etc/clickhouse-server/users.d/users.xml
       - ./data/clickhouse03:/var/lib/clickhouse
+      - ./log/clickhouse03:/var/log/clickhouse-server
 
   clickhouse04:
-    image: clickhouse/clickhouse-server:latest
+    image: clickhouse/clickhouse-server:23.3.2.37-alpine
     hostname: clickhouse04
     container_name: clickhouse04
     cpus: 0.7
@@ -125,7 +132,8 @@ services:
     networks:
       example.com: {}
     volumes:
-      - ./config/config04.xml:/etc/clickhouse-server/config.d/config.xml
-      - ./config/users.xml:/etc/clickhouse-server/users.xml
+      - ./config/clickhouse04/config.xml:/etc/clickhouse-server/config.d/config.xml
+      - ./config/users.xml:/etc/clickhouse-server/users.d/users.xml
       - ./data/clickhouse04:/var/lib/clickhouse
+      - ./log/clickhouse04:/var/log/clickhouse-server
 

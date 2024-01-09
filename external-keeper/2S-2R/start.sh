@@ -87,6 +87,7 @@ docker exec -it clickhouse01 clickhouse-client -h localhost -q "
 select * from db1.dist_table;
 "
 echo 
+exit
 echo
 echo
 echo "Create uk_price_paid table"
