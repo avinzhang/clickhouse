@@ -30,10 +30,10 @@ envsubst < ./config/users.xml > ./config/users/users.xml
 echo
 echo "* Download Kafka datagen connector and clickhouse sink connector"
 mkdir confluent-hub-components
-wget -O ./confluent-hub-components/confluentinc-kafka-connect-datagen-0.6.3.zip https://d1i4a15mxbxib1.cloudfront.net/api/plugins/confluentinc/kafka-connect-datagen/versions/0.6.3/confluentinc-kafka-connect-datagen-0.6.3.zip
-wget -O ./confluent-hub-components/clickhouse-clickhouse-kafka-connect-v1.0.10.zip https://d1i4a15mxbxib1.cloudfront.net/api/plugins/clickhouse/clickhouse-kafka-connect/versions/v1.0.10/clickhouse-clickhouse-kafka-connect-v1.0.10.zip
-unzip ./confluent-hub-components/confluentinc-kafka-connect-datagen-0.6.3.zip -d /tmp/
-unzip ./confluent-hub-components/clickhouse-clickhouse-kafka-connect-v1.0.10.zip -d /tmp/
+wget -O /tmp/confluentinc-kafka-connect-datagen-0.6.3.zip https://d1i4a15mxbxib1.cloudfront.net/api/plugins/confluentinc/kafka-connect-datagen/versions/0.6.3/confluentinc-kafka-connect-datagen-0.6.3.zip
+wget -O /tmp/clickhouse-clickhouse-kafka-connect-v1.0.10.zip https://d1i4a15mxbxib1.cloudfront.net/api/plugins/clickhouse/clickhouse-kafka-connect/versions/v1.0.10/clickhouse-clickhouse-kafka-connect-v1.0.10.zip
+unzip /tmp/confluentinc-kafka-connect-datagen-0.6.3.zip -d ./confluent-hub-components/
+unzip /tmp/clickhouse-clickhouse-kafka-connect-v1.0.10.zip -d ./confluent-hub-components/
 echo "Start the cluster"
 docker-compose up -d
 sleep 5
@@ -114,6 +114,9 @@ curl -i -X POST \
 
 echo
 sleep 3
+echo
+echo
+echo
 echo "* Select data from kafka.users table"
 docker exec -it clickhouse01 clickhouse-client -h localhost -q "
 select * from kafka.users;
