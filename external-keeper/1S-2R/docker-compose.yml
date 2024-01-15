@@ -1,0 +1,93 @@
+---
+version: '3.8'
+networks:
+  example.com:
+    name: "example.com"
+    driver: bridge
+services:
+  keeper01:
+    image: clickhouse/clickhouse-keeper:latest
+    ports:
+      - "9181:9181"
+    container_name: keeper01
+    hostname: keeper01
+    networks:
+      example.com: {}
+    volumes:
+      - ./config/keeper01/keeper.xml:/etc/clickhouse-keeper/keeper_config.xml
+      - ./data/keeper01:/var/lib/clickhouse
+      - ./log/keeper01:/var/log/clickhouse-keeper
+
+  keeper02:
+    image: clickhouse/clickhouse-keeper:latest
+    ports:
+      - "9182:9181"
+    container_name: keeper02
+    hostname: keeper02
+    networks:
+      example.com: {}
+    volumes:
+      - ./config/keeper02/keeper.xml:/etc/clickhouse-keeper/keeper_config.xml
+      - ./data/keeper02:/var/lib/clickhouse
+      - ./log/keeper02:/var/log/clickhouse-keeper
+
+  keeper03:
+    image: clickhouse/clickhouse-keeper:latest
+    ports:
+      - "9183:9181"
+    container_name: keeper03
+    hostname: keeper03
+    networks:
+      example.com: {}
+    volumes:
+      - ./config/keeper03/keeper.xml:/etc/clickhouse-keeper/keeper_config.xml
+      - ./data/keeper03:/var/lib/clickhouse
+      - ./log/keeper03:/var/log/clickhouse-keeper
+
+  clickhouse01:
+    image: clickhouse/clickhouse-server:23.3.2.37-alpine
+    hostname: clickhouse01
+    container_name: clickhouse01
+    cpus: 0.7
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    depends_on:
+    - "keeper01"
+    - "keeper02"
+    - "keeper03"
+    ports:
+      - "9001:9000"
+      - "8123:8123"
+    networks:
+      example.com: {}
+    volumes:
+      - ./config/clickhouse01/config.xml:/etc/clickhouse-server/config.d/config.xml
+      - ./config/users.xml:/etc/clickhouse-server/users.d/users.xml
+      - ./data/clickhouse01:/var/lib/clickhouse
+      - ./log/clickhouse01:/var/log/clickhouse-server
+
+  clickhouse02:
+    image: clickhouse/clickhouse-server:23.3.2.37-alpine
+    hostname: clickhouse02
+    container_name: clickhouse02
+    cpus: 0.7
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    depends_on:
+    - "keeper01"
+    - "keeper02"
+    - "keeper03"
+    ports:
+      - "9002:9000"
+    networks:
+      example.com: {}
+    volumes:
+      - ./config/clickhouse02/config.xml:/etc/clickhouse-server/config.d/config.xml
+      - ./config/users.xml:/etc/clickhouse-server/users.d/users.xml
+      - ./data/clickhouse02:/var/lib/clickhouse
+      - ./log/clickhouse02:/var/log/clickhouse-server
+
