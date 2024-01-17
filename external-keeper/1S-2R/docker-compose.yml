@@ -45,7 +45,7 @@ services:
       - ./log/keeper03:/var/log/clickhouse-keeper
 
   clickhouse01:
-    image: clickhouse/clickhouse-server:23.3.2.37-alpine
+    image: clickhouse/clickhouse-server:head
     hostname: clickhouse01
     container_name: clickhouse01
     cpus: 0.7
@@ -69,7 +69,7 @@ services:
       - ./log/clickhouse01:/var/log/clickhouse-server
 
   clickhouse02:
-    image: clickhouse/clickhouse-server:23.3.2.37-alpine
+    image: clickhouse/clickhouse-server:head
     hostname: clickhouse02
     container_name: clickhouse02
     cpus: 0.7
