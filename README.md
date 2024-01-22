@@ -16,3 +16,8 @@
   ORDER BY server ASC
   SETTINGS skip_unavailable_shards = 1
   ```
+
+* Find service 
+  ```
+  curl -s -u $CC_ACCESS_KEY:$CC_SECRET_KEY https://api.clickhouse.cloud/v1/organizations/orgId/services | jq -r '.result[]|select(.name == "avin")'
+  ```
