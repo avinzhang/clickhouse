@@ -35,3 +35,29 @@
   order by inital_query_start_time DESC
   LIMIT 2;
   ```
+
+* Use "EXPAIN" 
+  ** EXPLAIN indexes = 1
+  ** EXPLAIN AST 
+  ** EXPLAIN AST graph = 1
+  ** EXPLAIN SYNTAX
+  ** EXPLAIN PLAN indexes = 1, actions = 1
+  ** EXPLAIN PIPELINE
+
+* Checking max threads 
+  ```
+  select value from system.settings where name = 'max_threads';
+  ```
+
+* Check memory used for a query
+  ```
+  Select 
+    query,
+    query_duration_ms::String || ' ms' as query_duration
+    formatReadableSize(memory_usage) as memory_usage,
+  FROM clusterAllReplicas(default, system.query_log)
+  WHERE type = 'QueryFinish' AND
+    hasAny(tables, ['default.hits']) = 1
+  ORDER by inital_query_start_time DESC
+  LIMIT 3;
+  ```
