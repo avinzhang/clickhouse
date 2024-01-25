@@ -14,6 +14,9 @@
             <access_management>1</access_management>
             <password></password>
             <profile>default</profile>
+            <networks>
+                <ip>::/0</ip>
+            </networks>
             <quota>default</quota>
             <named_collection_control>1</named_collection_control>
             <show_named_collections>1</show_named_collections>
@@ -22,9 +25,8 @@
         <admin>
             <password>admin</password>
             <profile>default</profile>
-
             <networks>
-                <ip>127.0.0.1/0</ip>
+                <ip>::/0</ip>
             </networks>
             <quota>default</quota>
         </admin>
