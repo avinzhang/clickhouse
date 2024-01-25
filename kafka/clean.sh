@@ -1,3 +1,3 @@
 rm -rf ./data/*/* -y
-rm -rf ./config/*/* -y
-rm -rf ./log/clickhouse0*/* -y
+rm -rf ./log/*/* -y
+rm -rf ./confluent-hub-components

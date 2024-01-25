@@ -1,12 +1,51 @@
 ---
-version: '3.7'
+version: '3.8'
 networks:
   example.com:
     name: "example.com"
     driver: bridge
 services:
+  keeper01:
+    image: clickhouse/clickhouse-keeper:latest
+    ports:
+      - "9181:9181"
+    container_name: keeper01
+    hostname: keeper01
+    networks:
+      example.com: {}
+    volumes:
+      - ./config/keeper01/keeper.xml:/etc/clickhouse-keeper/keeper_config.xml
+      - ./data/keeper01:/var/lib/clickhouse
+      - ./log/keeper01:/var/log/clickhouse-keeper
+
+  keeper02:
+    image: clickhouse/clickhouse-keeper:latest
+    ports:
+      - "9182:9181"
+    container_name: keeper02
+    hostname: keeper02
+    networks:
+      example.com: {}
+    volumes:
+      - ./config/keeper02/keeper.xml:/etc/clickhouse-keeper/keeper_config.xml
+      - ./data/keeper02:/var/lib/clickhouse
+      - ./log/keeper02:/var/log/clickhouse-keeper
+
+  keeper03:
+    image: clickhouse/clickhouse-keeper:latest
+    ports:
+      - "9183:9181"
+    container_name: keeper03
+    hostname: keeper03
+    networks:
+      example.com: {}
+    volumes:
+      - ./config/keeper03/keeper.xml:/etc/clickhouse-keeper/keeper_config.xml
+      - ./data/keeper03:/var/lib/clickhouse
+      - ./log/keeper03:/var/log/clickhouse-keeper
+
   clickhouse01:
-    image: clickhouse/clickhouse-server:23.3.2.37-alpine
+    image: clickhouse/clickhouse-server:head
     hostname: clickhouse01
     container_name: clickhouse01
     cpus: 0.7
@@ -14,18 +53,43 @@ services:
       nofile:
         soft: 262144
         hard: 262144
+    depends_on:
+    - "keeper01"
+    - "keeper02"
+    - "keeper03"
     ports:
       - "9001:9000"
-      - "9181:9181"
       - "8123:8123"
     networks:
       example.com: {}
     volumes:
-      - ./config/clickhouse01/config.xml:/etc/clickhouse-server/config.xml
-      - ./config/clickhouse01/keeper.xml:/etc/clickhouse-server/config.d/keeper.xml
-      - ./config/users/users.xml:/etc/clickhouse-server/users.xml
+      - ./config/clickhouse01/config.xml:/etc/clickhouse-server/config.d/config.xml
+      - ./config/users.xml:/etc/clickhouse-server/users.d/users.xml
       - ./data/clickhouse01:/var/lib/clickhouse
       - ./log/clickhouse01:/var/log/clickhouse-server
+
+  clickhouse02:
+    image: clickhouse/clickhouse-server:head
+    hostname: clickhouse02
+    container_name: clickhouse02
+    cpus: 0.7
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    depends_on:
+    - "keeper01"
+    - "keeper02"
+    - "keeper03"
+    ports:
+      - "9002:9000"
+    networks:
+      example.com: {}
+    volumes:
+      - ./config/clickhouse02/config.xml:/etc/clickhouse-server/config.d/config.xml
+      - ./config/users.xml:/etc/clickhouse-server/users.d/users.xml
+      - ./data/clickhouse02:/var/lib/clickhouse
+      - ./log/clickhouse02:/var/log/clickhouse-server
 
   kafka:
     cpus: 0.7
@@ -40,13 +104,19 @@ services:
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
-      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://kafka:9092'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
       KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       KAFKA_CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: 'kafka:9092'
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_METADATA_TOPIC_REPLICATION_FACTOR: 1
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      KAFKA_CONFLUENT_TIER_METADATA_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_CLUSTER_LINK_METADATA_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_JMX_PORT: 9101
       KAFKA_JMX_HOSTNAME: localhost
       KAFKA_PROCESS_ROLES: 'broker,controller'
@@ -54,7 +124,7 @@ services:
       KAFKA_LISTENERS: 'PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092'
       KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
-      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      #KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
       KAFKA_CONFLUENT_REPORTERS_TELEMETRY_AUTO_ENABLE: 'false'
       KAFKA_CONFLUENT_SECURITY_EVENT_LOGGER_ENABLE: 'false'
