@@ -1,7 +1,35 @@
 #!/bin/bash
 
-docker-compose up -d
-sleep 5
+docker-compose up -d --build --no-deps kafka keeper01 keeper02 keeper03
+
+KEEPERS_STARTED=false
+while [ "$KEEPERS_STARTED" = "false" ]
+do
+    echo "Waiting for Keepers to start..."
+    keeper01_status=`docker-compose exec keeper01 bash -c "echo ruok |nc localhost 9181"`
+    keeper02_status=`docker-compose exec keeper02 bash -c "echo ruok |nc localhost 9181"`
+    keeper03_status=`docker-compose exec keeper03 bash -c "echo ruok |nc localhost 9181"`
+    if [ "$keeper01_status" = "imok" ] && [ "$keeper02_status" = "imok" ] && [ "$keeper03_status" = "imok" ]; then
+       echo "Keepers are started and ready" 
+       KEEPERS_STARTED=true
+    fi
+    sleep 5
+done
+
+docker-compose up -d --build --no-deps clickhouse01 clickhouse02
+
+KAFKA_STARTED=false
+while [ $KAFKA_STARTED == false ]
+do
+    docker-compose logs kafka | grep "Kafka Server started" &> /dev/null
+    if [ $? -eq 0 ]; then
+      KAFKA_STARTED=true
+      echo "kafka is started and ready"
+    else
+      echo "Waiting for Kafka to start..."
+    fi
+    sleep 5
+done
 
 echo "* Create github MergeTree table"
 docker exec -it clickhouse01 clickhouse-client -h localhost -mn -q "
@@ -35,18 +63,6 @@ CREATE TABLE github
 ) ENGINE = MergeTree ORDER BY (event_type, repo_name, created_at);
 "
 
-KAFKA_STARTED=false
-while [ $KAFKA_STARTED == false ]
-do
-    docker-compose logs kafka | grep "Kafka Server started" &> /dev/null
-    if [ $? -eq 0 ]; then
-      KAFKA_STARTED=true
-      echo "kafka is started and ready"
-    else
-      echo "Waiting for Kafka to start..."
-    fi
-    sleep 5
-done
 
 # Create kafka topic
 echo "* Create kafka topic"
@@ -55,6 +71,8 @@ kafka-topics --bootstrap-server localhost:9092 --topic github --create --replica
 # Produce messages to the topic
 echo "* Produce messages to kafka topic using github.ndjson file"
 kafka-console-producer --bootstrap-server localhost:9092 --topic github < ./github.ndjson
+
+sleep 3
 
 echo " Check message are produced into the topic correctly"
 kafka-console-consumer --bootstrap-server localhost:9092 --topic github --from-beginning --timeout-ms 1000

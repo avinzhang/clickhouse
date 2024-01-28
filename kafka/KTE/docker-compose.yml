@@ -7,8 +7,6 @@ networks:
 services:
   keeper01:
     image: clickhouse/clickhouse-keeper:latest
-    ports:
-      - "9181:9181"
     container_name: keeper01
     hostname: keeper01
     networks:
@@ -20,8 +18,6 @@ services:
 
   keeper02:
     image: clickhouse/clickhouse-keeper:latest
-    ports:
-      - "9182:9181"
     container_name: keeper02
     hostname: keeper02
     networks:
@@ -33,8 +29,6 @@ services:
 
   keeper03:
     image: clickhouse/clickhouse-keeper:latest
-    ports:
-      - "9183:9181"
     container_name: keeper03
     hostname: keeper03
     networks:
