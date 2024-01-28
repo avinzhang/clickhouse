@@ -1,3 +1,4 @@
 data/
 *.swp
 log/
+confluent-hub-components/
