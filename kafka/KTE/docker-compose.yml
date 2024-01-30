@@ -123,6 +123,6 @@ services:
       KAFKA_CONFLUENT_REPORTERS_TELEMETRY_AUTO_ENABLE: 'false'
       KAFKA_CONFLUENT_SECURITY_EVENT_LOGGER_ENABLE: 'false'
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
-      KAFKA_LOG4J_ROOT_LOGLEVEL: DEBUG
+      KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
     command: bash -c "sed -i '/KAFKA_ZOOKEEPER_CONNECT/d' /etc/confluent/docker/configure && sed -i 's/cub zk-ready/echo ignore zk-ready/' /etc/confluent/docker/ensure && /etc/confluent/docker/run"
 
