@@ -51,7 +51,7 @@ END
 
 echo "* Create github MergeTree table"
 docker exec -it clickhouse01 clickhouse-client -h localhost -mn -q "
-CREATE TABLE readings (
+CREATE OR REPLACE TABLE readings (
     readings_id Int32 Codec(DoubleDelta, LZ4),
     time DateTime Codec(DoubleDelta, LZ4),
     date ALIAS toDate(time),
@@ -64,7 +64,7 @@ ORDER BY (readings_id, time);
 #create kafka table engine
 echo  "* Create kafka table engine"
 docker exec -it clickhouse01 clickhouse-client -h localhost -mn -q "
-CREATE TABLE readings_queue (
+CREATE OR REPLACE TABLE readings_queue (
     readings_id Int32,
     time DateTime,
     temperature Decimal(5,2)
@@ -88,7 +88,7 @@ SELECT *
 FROM readings_queue where length(_error) == 0;
 "
 
-
+exit
 # Write data from clickhouse to kafka"
 
 echo "* Create topic github_error to store malformed messages returned from Clickhouse"
@@ -97,7 +97,7 @@ kafka-topics --bootstrap-server localhost:9092 --topic reading-error --create --
 
 echo " Create readings_out_queue kafka table to write to kafak topic"
 docker exec -it clickhouse01 clickhouse-client -h localhost -mn -q "
-CREATE TABLE readings_out_queue (
+CREATE OR REPLACE TABLE readings_out_queue (
     topic String,
     partition Int64,
     offset Int64,
