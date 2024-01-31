@@ -1,0 +1,8 @@
+<clickhouse>
+  <kafka>
+    <debug>all</debug>
+    <auto_offset_reset>earliest</auto_offset_reset>
+    <enable_auto_commit>true</enable_auto_commit>
+  </kafka>
+</clickhouse>
+  
