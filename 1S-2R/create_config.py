@@ -15,7 +15,22 @@ def create_keeper_config(num_of_keepers):
     root = tree.getroot()
     kname = root.find("keeper_server/server_id")
     kname.text = str(keeper_id + 1)
+
+    server_id = 0
+    raft_config = root.find("keeper_server/raft_configuration")
+    while server_id < num_of_keepers:
+      server = ET.SubElement(raft_config, 'server')
+      s_id = ET.SubElement(server, 'id')
+      s_id.text = str(server_id + 1)
+      hostname = ET.SubElement(server, 'hostname')
+      hostname.text = 'keeper0' + str(server_id + 1)
+      port = ET.SubElement(server, 'port')
+      port.text = str(9234)
+      server_id+=1
+
+
     tree = ET.ElementTree(root)
+    ET.indent(tree, space="    ", level=0)
     tree.write('./config/keeper0' + str(keeper_id + 1) + '/keeper.xml')
     keeper_id+=1
 
