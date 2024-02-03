@@ -32,21 +32,6 @@
     <distributed_ddl>
         <path>/clickhouse/task_queue/ddl</path>
     </distributed_ddl>
-    <remote_servers>
-        <cluster_1S_2R>
-            <shard>
-                <internal_replication>true</internal_replication>
-                <replica>
-                    <host>clickhouse01</host>
-                    <port>9000</port>
-                </replica>
-                <replica>
-                    <host>clickhouse02</host>
-                    <port>9000</port>
-                </replica>
-            </shard>
-        </cluster_1S_2R>
-    </remote_servers>
     <zookeeper>
         <node>
             <host>keeper01</host>
@@ -61,9 +46,5 @@
             <port>9181</port>
         </node>
     </zookeeper>
-    <macros>
-        <shard>0$shard_id</shard>
-        <replica>0$replica_id</replica>
-    </macros>
-    <openSSL remove="remove"></openSSL>
+    <openSSL remove="remove"/>
 </clickhouse>
