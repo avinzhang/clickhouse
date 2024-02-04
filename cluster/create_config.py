@@ -34,11 +34,7 @@ def create_keeper_config(num_of_keepers):
     tree.write('./config/keeper0' + str(keeper_id + 1) + '/keeper.xml')
     keeper_id+=1
 
-@click.command()
-@click.option("-s", "--num_of_shards", default=1, help="Number of shards to create. Default is 1")
-@click.option("-r", "--num_of_replicas", default=2, help="Number of replicas to create. Default is 2")
-@click.option("-k", "--num_of_keepers", default=3, help="Number of keepers to create. Default is 3")
-def create_config(num_of_shards, num_of_replicas, num_of_keepers):
+def create_ch_config(num_of_shards, num_of_replicas):
   num_of_nodes = num_of_shards * num_of_replicas
   cluster_name = 'cluster_'+ str(num_of_shards) + 'S_' + str(num_of_replicas) + 'R'
   node_id = 0
@@ -89,11 +85,15 @@ def create_config(num_of_shards, num_of_replicas, num_of_keepers):
     ET.indent(tree, space="    ", level=0)
     tree.write('./config/clickhouse0' + str(node_id + 1) + '/config.xml')
     node_id+=1
-  create_keeper_config(num_of_keepers)
 
-def main():
-  create_config()
+@click.command()
+@click.option("-s", "--num_of_shards", default=1, help="Number of shards to create. Default is 1")
+@click.option("-r", "--num_of_replicas", default=2, help="Number of replicas to create. Default is 2")
+@click.option("-k", "--num_of_keepers", default=3, help="Number of keepers to create. Default is 3")
+def create_all_configs(num_of_shards, num_of_replicas, num_of_keepers):
+  create_ch_config(num_of_shards, num_of_replicas)
+  create_keeper_config(num_of_keepers)
   
 
 if __name__ == "__main__":
-    main()
+    create_all_configs()
