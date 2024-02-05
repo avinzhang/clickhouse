@@ -1,7 +1,10 @@
 import xml.etree.ElementTree as ET
+from pathlib import Path
 import os
-
+import json
+import yaml
 import click
+import pprint 
 
 
 def create_keeper_config(num_of_keepers):
@@ -86,6 +89,62 @@ def create_ch_config(num_of_shards, num_of_replicas):
     tree.write('./config/clickhouse0' + str(node_id + 1) + '/config.xml')
     node_id+=1
 
+class Dumper(yaml.Dumper):
+    def increase_indent(self, flow=False, *args, **kwargs):
+        return super().increase_indent(flow=flow, indentless=False)
+
+def write_yaml_to_file(py_obj,filename):
+  with open(f'docker-compose.yml', 'w',) as f :
+    yaml.dump(py_obj,f,sort_keys=False)
+    print('Written to file successfully')
+
+
+def create_docker_compose(num_of_shards, num_of_replicas, num_of_keepers):
+  with open(f'./templates/docker-compose.yml','r') as f: 
+    data = yaml.safe_load(f)
+    version_tmp = {'version': data['version']}
+    with open(f'docker-compose.yml', 'w') as file:
+        yaml.dump(version_tmp,file,sort_keys=False)
+    network_tmp = {'networks': data['networks']}
+    with open(f'docker-compose.yml', 'a') as file:
+        yaml.dump(network_tmp,file,sort_keys=False)
+
+
+    for keeper_id in range(num_of_keepers):
+      port_tmp = ([str(9181 + keeper_id) +':9181'])
+      data['services']['keeper']['ports'] = port_tmp
+      data['services']['keeper']['hostname'] = 'keeper0'+str(keeper_id+1)
+      data['services']['keeper']['container_name'] = 'keeper0'+str(keeper_id+1)
+      volume_tmp = (['./config/keeper0'+str(keeper_id+1)+'/keeper.xml:/etc/clickhouse-keeper/keeper_config.xml',
+      './log/keeper0'+str(keeper_id+1)+':/var/log/clickhouse-keeper',
+      './data/keeper0'+str(keeper_id+1)+':/var/lib/clickhouse'])
+      data['services']['keeper']['volumes'] = volume_tmp
+      data['services']['keeper0' + str(keeper_id+1)] = data['services'].get('keeper')
+      keeper_tmp = {'keeper0'+str(keeper_id+1): data['services'].get('keeper')}
+      with open(f'docker-compose.yml', 'a') as file:
+        yaml.dump(keeper_tmp,file,sort_keys=False)
+      
+    for clickhouse_id in range(num_of_shards * num_of_replicas):
+      with open(f'./templates/docker-compose.yml','r') as f:
+        data = yaml.safe_load(f)
+      port_tmp = ([str(9001 + clickhouse_id) +':9000'])
+      data['services']['clickhouse']['ports'] = port_tmp
+      data['services']['clickhouse']['hostname'] = 'clickhouse0'+str(clickhouse_id+1)
+      data['services']['clickhouse']['container_name'] = 'clickhouse0'+str(clickhouse_id+1)
+      volume_tmp = (['./config/clickhouse0'+ str(clickhouse_id+1)+':/etc/clickhouse-server/config.d',
+      './config/users.xml:/etc/clickhouse-server/users.d/users.xml',
+      './data/clickhouse0'+str(clickhouse_id+1)+':/var/lib/clickhouse',
+      './log/clickhouse0'+str(clickhouse_id+1)+':/var/log/clickhouse-server'])
+
+      data['services']['clickhouse']['volumes'] = volume_tmp
+      data['services']['clickhouse0' + str(clickhouse_id+1)] = data['services'].get('clickhouse')
+      clickhouse_tmp = {'clickhouse0'+str(clickhouse_id+1): data['services'].get('clickhouse')}
+      services_tmp = {'services': data.get('services')}
+
+      with open(f'docker-compose.yml', 'a') as file:
+        yaml.dump(clickhouse_tmp,file,sort_keys=False)
+
+
 @click.command()
 @click.option("-s", "--num_of_shards", default=1, help="Number of shards to create. Default is 1")
 @click.option("-r", "--num_of_replicas", default=2, help="Number of replicas to create. Default is 2")
@@ -93,6 +152,7 @@ def create_ch_config(num_of_shards, num_of_replicas):
 def create_all_configs(num_of_shards, num_of_replicas, num_of_keepers):
   create_ch_config(num_of_shards, num_of_replicas)
   create_keeper_config(num_of_keepers)
+  create_docker_compose(num_of_shards, num_of_replicas, num_of_keepers)
   
 
 if __name__ == "__main__":
