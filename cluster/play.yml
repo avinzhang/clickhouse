@@ -1,7 +1,0 @@
----
-vars:
-  num_of_keepers: 3
-  num_of_chnodes: 2
-templates:
-  - src: templates/docker-compose.yml.j2
-    dest: docker-compose.yml 

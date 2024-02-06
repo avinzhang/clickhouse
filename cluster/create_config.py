@@ -1,10 +1,7 @@
 import xml.etree.ElementTree as ET
-from pathlib import Path
 import os
-import json
 import yaml
 import click
-import pprint 
 
 
 def create_keeper_config(num_of_keepers):
@@ -89,15 +86,6 @@ def create_ch_config(num_of_shards, num_of_replicas):
     tree.write('./config/clickhouse0' + str(node_id + 1) + '/config.xml')
     node_id+=1
 
-class Dumper(yaml.Dumper):
-    def increase_indent(self, flow=False, *args, **kwargs):
-        return super().increase_indent(flow=flow, indentless=False)
-
-def write_yaml_to_file(py_obj,filename):
-  with open(f'docker-compose.yml', 'w',) as f :
-    yaml.dump(py_obj,f,sort_keys=False)
-    print('Written to file successfully')
-
 
 def create_docker_compose(num_of_shards, num_of_replicas, num_of_keepers):
   with open(f'./templates/docker-compose.yml','r') as f: 
@@ -138,7 +126,6 @@ def create_docker_compose(num_of_shards, num_of_replicas, num_of_keepers):
       with open(f'./templates/docker-compose.yml','r') as f:
         data = yaml.safe_load(f)
       clickhouse_tmp = data['services']['clickhouse']
-    print(services_all)
     services_tmp = {'services': services_all}
     with open(f'docker-compose.yml', 'a') as f:
       yaml.dump(services_tmp,f,sort_keys=False)
@@ -152,8 +139,8 @@ def create_docker_compose(num_of_shards, num_of_replicas, num_of_keepers):
 @click.option("-r", "--num_of_replicas", default=2, help="Number of replicas to create. Default is 2")
 @click.option("-k", "--num_of_keepers", default=3, help="Number of keepers to create. Default is 3")
 def create_all_configs(num_of_shards, num_of_replicas, num_of_keepers):
-  #create_ch_config(num_of_shards, num_of_replicas)
-  #create_keeper_config(num_of_keepers)
+  create_ch_config(num_of_shards, num_of_replicas)
+  create_keeper_config(num_of_keepers)
   create_docker_compose(num_of_shards, num_of_replicas, num_of_keepers)
   
 
