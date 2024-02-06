@@ -109,40 +109,42 @@ def create_docker_compose(num_of_shards, num_of_replicas, num_of_keepers):
     with open(f'docker-compose.yml', 'a') as file:
         yaml.dump(network_tmp,file,sort_keys=False)
 
-
+    keeper_tmp = data['services']['keeper']
+    services_all = {}
     for keeper_id in range(num_of_keepers):
-      port_tmp = ([str(9181 + keeper_id) +':9181'])
-      data['services']['keeper']['ports'] = port_tmp
-      data['services']['keeper']['hostname'] = 'keeper0'+str(keeper_id+1)
-      data['services']['keeper']['container_name'] = 'keeper0'+str(keeper_id+1)
+      keeper_tmp['ports'] = ([str(9181 + keeper_id) +':9181'])
+      keeper_tmp['hostname'] = 'keeper0'+str(keeper_id+1)
+      keeper_tmp['container_name'] = 'keeper0'+str(keeper_id+1)
       volume_tmp = (['./config/keeper0'+str(keeper_id+1)+'/keeper.xml:/etc/clickhouse-keeper/keeper_config.xml',
       './log/keeper0'+str(keeper_id+1)+':/var/log/clickhouse-keeper',
       './data/keeper0'+str(keeper_id+1)+':/var/lib/clickhouse'])
-      data['services']['keeper']['volumes'] = volume_tmp
-      data['services']['keeper0' + str(keeper_id+1)] = data['services'].get('keeper')
-      keeper_tmp = {'keeper0'+str(keeper_id+1): data['services'].get('keeper')}
-      with open(f'docker-compose.yml', 'a') as file:
-        yaml.dump(keeper_tmp,file,sort_keys=False)
-      
-    for clickhouse_id in range(num_of_shards * num_of_replicas):
+      keeper_tmp['volumes'] = volume_tmp
+      services_all['keeper0'+str(keeper_id+1)] = keeper_tmp
       with open(f'./templates/docker-compose.yml','r') as f:
         data = yaml.safe_load(f)
-      port_tmp = ([str(9001 + clickhouse_id) +':9000'])
-      data['services']['clickhouse']['ports'] = port_tmp
-      data['services']['clickhouse']['hostname'] = 'clickhouse0'+str(clickhouse_id+1)
-      data['services']['clickhouse']['container_name'] = 'clickhouse0'+str(clickhouse_id+1)
+      keeper_tmp = data['services']['keeper']
+      
+    clickhouse_tmp = data['services']['clickhouse']
+    for clickhouse_id in range(num_of_shards * num_of_replicas):
+      clickhouse_tmp['ports'] = ([str(9001 + clickhouse_id) +':9000'])
+      clickhouse_tmp['hostname'] = 'clickhouse0'+str(clickhouse_id+1)
+      clickhouse_tmp['container_name'] = 'clickhouse0'+str(clickhouse_id+1)
       volume_tmp = (['./config/clickhouse0'+ str(clickhouse_id+1)+':/etc/clickhouse-server/config.d',
       './config/users.xml:/etc/clickhouse-server/users.d/users.xml',
       './data/clickhouse0'+str(clickhouse_id+1)+':/var/lib/clickhouse',
       './log/clickhouse0'+str(clickhouse_id+1)+':/var/log/clickhouse-server'])
+      clickhouse_tmp['volumes'] = volume_tmp
+      services_all['clickhouse0'+str(clickhouse_id+1)] = clickhouse_tmp
+      with open(f'./templates/docker-compose.yml','r') as f:
+        data = yaml.safe_load(f)
+      clickhouse_tmp = data['services']['clickhouse']
+    print(services_all)
+    services_tmp = {'services': services_all}
+    with open(f'docker-compose.yml', 'a') as f:
+      yaml.dump(services_tmp,f,sort_keys=False)
 
-      data['services']['clickhouse']['volumes'] = volume_tmp
-      data['services']['clickhouse0' + str(clickhouse_id+1)] = data['services'].get('clickhouse')
-      clickhouse_tmp = {'clickhouse0'+str(clickhouse_id+1): data['services'].get('clickhouse')}
-      services_tmp = {'services': data.get('services')}
+    
 
-      with open(f'docker-compose.yml', 'a') as file:
-        yaml.dump(clickhouse_tmp,file,sort_keys=False)
 
 
 @click.command()
@@ -150,8 +152,8 @@ def create_docker_compose(num_of_shards, num_of_replicas, num_of_keepers):
 @click.option("-r", "--num_of_replicas", default=2, help="Number of replicas to create. Default is 2")
 @click.option("-k", "--num_of_keepers", default=3, help="Number of keepers to create. Default is 3")
 def create_all_configs(num_of_shards, num_of_replicas, num_of_keepers):
-  create_ch_config(num_of_shards, num_of_replicas)
-  create_keeper_config(num_of_keepers)
+  #create_ch_config(num_of_shards, num_of_replicas)
+  #create_keeper_config(num_of_keepers)
   create_docker_compose(num_of_shards, num_of_replicas, num_of_keepers)
   
 
