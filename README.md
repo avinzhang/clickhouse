@@ -61,3 +61,20 @@
   ORDER by inital_query_start_time DESC
   LIMIT 3;
   ```
+* Analyse slow query
+  ```
+  select 
+    query_id, 
+    normalized_query_hash, 
+    type, 
+    read_rows, 
+    ProfileEvents['OSCPUWaitMicroseconds'], 
+    formatReadableSize(ProfileEvents['CachedReadBufferReadFromCacheBytes']) AS read_from_cache,
+    formatReadableSize(ProfileEvents['CachedReadBufferReadFromSourceBytes']) AS read_from_storage, 
+    read_bytes, 
+    query_duration_ms, 
+    result_rows, 
+    event_time_microseconds 
+  from clusterAllReplicas(default, system.query_log) 
+  where normalized_query_hash = '15292739615144886244' and type = 'QueryFinish' order by event_time_microseconds;
+  ```
