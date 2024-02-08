@@ -59,8 +59,6 @@ def create_ch_config(num_of_shards, num_of_replicas):
     cluster = ET.SubElement(rs, cluster_name)
     while shard_id <= num_of_shards:
       shard = ET.SubElement(cluster, 'shard')
-      internal_replication = ET.SubElement(shard, 'internal_replication')
-      internal_replication.text = "true"
       replica_id = 0
       while replica_id < num_of_replicas:
         replica = ET.SubElement(shard, 'replica')
