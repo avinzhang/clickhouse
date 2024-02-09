@@ -4,8 +4,8 @@
 #XML configs for keepers and clickhouse nodes.
 #By default, 3 keepers, 1 shard, 2 replicas
 #To change, see help: python3 create_config.py --help
-num_of_shards=2
-num_of_replicas=3
+num_of_shards=1
+num_of_replicas=2
 python3 create_config.py -s $num_of_shards -r $num_of_replicas
 num_of_nodes=$((num_of_shards * num_of_replicas))
 init_node=clickhouse01
@@ -39,3 +39,5 @@ echo
 echo "* Start clickhouse nodes"
 docker-compose up -d --build --no-deps $nodes
 echo
+
+
