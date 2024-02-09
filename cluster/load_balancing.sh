@@ -3,8 +3,8 @@
 #XML configs for keepers and clickhouse nodes.  
 #By default, 3 keepers, 1 shard, 2 replicas
 #To change, see help: python3 create_config.py --help
-num_of_shards=2
-num_of_replicas=3
+num_of_shards=3
+num_of_replicas=2
 python3 create_config.py -s $num_of_shards -r $num_of_replicas
 num_of_nodes=$((num_of_shards * num_of_replicas))
 init_node=clickhouse01
@@ -38,13 +38,16 @@ echo
 echo "* Start clickhouse nodes"
 docker-compose up -d --build --no-deps $nodes
 echo
-exit
+sleep 5
+echo "* Create database"
+createdb=$(echo "create database db1 on cluster cluster_$(echo $num_of_shards)S_$(echo $num_of_replicas)R")
 docker exec -it clickhouse01 clickhouse-client -h localhost -q"
-create database db1 on cluster 'cluster_2S_3R'
+$createdb
 "
-
-docker exec -it clickhouse01 clickhouse-client -h localhost -q "
-CREATE TABLE db1.events on cluster 'cluster_2S_3R'
+echo
+echo
+echo " create RMT table"
+create_RMT_table="CREATE TABLE db1.events on cluster 'cluster_$(echo $num_of_shards)S_$(echo $num_of_replicas)R'
 (
     time DateTime,
     uid Int64,
@@ -54,19 +57,53 @@ ENGINE = ReplicatedMergeTree('/clickhouse/tables/cluster_2S_3R/{shard}/events', 
 PARTITION BY toDate(time)
 ORDER BY uid;
 "
-
-
 docker exec -it clickhouse01 clickhouse-client -h localhost -q "
-CREATE TABLE db1.dist_table ON CLUSTER 'cluster_2S_3R'
+$create_RMT_table
+"
+
+echo
+echo " Create dist table"
+create_dist_table="CREATE TABLE db1.dist_table ON CLUSTER 'cluster_$(echo $num_of_shards)S_$(echo $num_of_replicas)R'
   AS db1.events
-  ENGINE = Distributed('cluster_2S_3R', db1, events, rand());
+  ENGINE = Distributed('cluster_$(echo $num_of_shards)S_$(echo $num_of_replicas)R', db1, events, rand());
 "
+
 docker exec -it clickhouse01 clickhouse-client -h localhost -q "
+$create_dist_table
+"
+echo
+sleep 3
+echo "* Insert messages"
+docker exec -it clickhouse01 clickhouse-client -h localhost -mn -q "
 INSERT INTO db1.dist_table VALUES('2020-01-01 10:00:00', 100, 'view');
+INSERT INTO db1.dist_table VALUES('2020-01-02 10:00:00', 200, 'view');
+INSERT INTO db1.dist_table VALUES('2020-01-03 10:00:00', 300, 'view');
+INSERT INTO db1.dist_table VALUES('2020-01-04 10:00:00', 400, 'view');
+INSERT INTO db1.dist_table VALUES('2020-01-05 10:00:00', 500, 'view');
+INSERT INTO db1.dist_table VALUES('2020-01-06 10:00:00', 600, 'view');
+INSERT INTO db1.dist_table VALUES('2020-01-07 10:00:00', 700, 'view');
+INSERT INTO db1.dist_table VALUES('2020-01-08 10:00:00', 800, 'view');
+INSERT INTO db1.dist_table VALUES('2020-01-09 10:00:00', 900, 'view');
 "
 
-
+sleep 3
+echo " query table 1"
 docker exec -it clickhouse01 clickhouse-client -h localhost -nm -q "
 set send_logs_level = 'trace';
-select * from db1.events;
+select * from db1.dist_table;
+"
+
+echo
+echo
+echo " query table 2"
+docker exec -it clickhouse01 clickhouse-client -h localhost -nm -q "
+set send_logs_level = 'trace';
+select * from db1.dist_table;
+"
+echo
+echo
+echo " query table 3"
+docker exec -it clickhouse01 clickhouse-client -h localhost -nm -q "
+set send_logs_level = 'trace';
+select * from db1.dist_table;
 "
