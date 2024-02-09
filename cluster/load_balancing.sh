@@ -1,7 +1,6 @@
 #!/bin/bash
 
-
-#XML configs for keepers and clickhouse nodes.
+#XML configs for keepers and clickhouse nodes.  
 #By default, 3 keepers, 1 shard, 2 replicas
 #To change, see help: python3 create_config.py --help
 num_of_shards=2
@@ -39,3 +38,35 @@ echo
 echo "* Start clickhouse nodes"
 docker-compose up -d --build --no-deps $nodes
 echo
+exit
+docker exec -it clickhouse01 clickhouse-client -h localhost -q"
+create database db1 on cluster 'cluster_2S_3R'
+"
+
+docker exec -it clickhouse01 clickhouse-client -h localhost -q "
+CREATE TABLE db1.events on cluster 'cluster_2S_3R'
+(
+    time DateTime,
+    uid Int64,
+    type LowCardinality(String)
+)
+ENGINE = ReplicatedMergeTree('/clickhouse/tables/cluster_2S_3R/{shard}/events', '{replica}')
+PARTITION BY toDate(time)
+ORDER BY uid;
+"
+
+
+docker exec -it clickhouse01 clickhouse-client -h localhost -q "
+CREATE TABLE db1.dist_table ON CLUSTER 'cluster_2S_3R'
+  AS db1.events
+  ENGINE = Distributed('cluster_2S_3R', db1, events, rand());
+"
+docker exec -it clickhouse01 clickhouse-client -h localhost -q "
+INSERT INTO db1.dist_table VALUES('2020-01-01 10:00:00', 100, 'view');
+"
+
+
+docker exec -it clickhouse01 clickhouse-client -h localhost -nm -q "
+set send_logs_level = 'trace';
+select * from db1.events;
+"
