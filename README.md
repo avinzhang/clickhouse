@@ -78,3 +78,19 @@
   from clusterAllReplicas(default, system.query_log) 
   where normalized_query_hash = '15292739615144886244' and type = 'QueryFinish' order by event_time_microseconds;
   ```
+* Count the number of parts for each partition
+  ```
+  SELECT
+    database,
+    table,
+    partition,
+    sum(rows) AS rows,
+    count() AS part_count
+  FROM system.parts
+  WHERE (active = 1) AND (table LIKE 'trips') AND (database LIKE 'default')
+  GROUP BY
+      database,
+      table,
+      partition
+  ORDER BY part_count DESC;
+  ```
