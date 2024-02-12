@@ -118,7 +118,7 @@ def create_docker_compose(num_of_shards, num_of_replicas, num_of_keepers):
     
   clickhouse_tmp = data['services']['clickhouse']
   for clickhouse_id in range(num_of_shards * num_of_replicas):
-    clickhouse_tmp['ports'] = ([str(9001 + clickhouse_id) +':9000'])
+    clickhouse_tmp['ports'] = ([str(9001 + clickhouse_id) +':9000', str(8123 + clickhouse_id) + ':8123'])
     clickhouse_tmp['hostname'] = 'clickhouse0'+str(clickhouse_id+1)
     clickhouse_tmp['container_name'] = 'clickhouse0'+str(clickhouse_id+1)
     volume_tmp = (['./config/clickhouse0'+ str(clickhouse_id+1)+':/etc/clickhouse-server/config.d',
