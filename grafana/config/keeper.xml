@@ -26,23 +26,7 @@
             <raft_logs_level>information</raft_logs_level>
             <compress_logs>false</compress_logs>
         </coordination_settings>
-        <raft_configuration>
-            <server>
-                <id>1</id>
-                <hostname>keeper01</hostname>
-                <port>9234</port>
-            </server>
-            <server>
-                <id>2</id>
-                <hostname>keeper02</hostname>
-                <port>9234</port>
-            </server>
-            <server>
-                <id>3</id>
-                <hostname>keeper03</hostname>
-                <port>9234</port>
-            </server>
-        </raft_configuration>
+        <raft_configuration></raft_configuration>
     </keeper_server>
     <openSSL remove="remove"></openSSL>
 </clickhouse>
