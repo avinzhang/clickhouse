@@ -8,13 +8,11 @@ num_of_shards=1
 num_of_replicas=2
 python3 create_config.py -s $num_of_shards -r $num_of_replicas
 num_of_nodes=$((num_of_shards * num_of_replicas))
-init_node=clickhouse01
-nodes=""
-i=2
-while [ $i -le 6 ]
+ch_nodes=""
+i=1
+while [ $i -le $num_of_nodes ]
   do
-    nodes=`echo $init_node | sed -e "s/$/ clickhouse0$i/"`
-    init_node=$nodes
+    ch_nodes=`echo $ch_nodes | sed -e "s/$/ clickhouse0$i/"`
     i=$(( $i + 1 ))
 done
 echo
@@ -39,5 +37,16 @@ echo
 echo "* Start clickhouse nodes"
 docker-compose up -d --build --no-deps $nodes
 echo
-
+CLICKHOUSE_STARTED=false
+while [ "$CLICKHOUSE_STARTED" = "false" ]
+do
+    echo "   Waiting for Clickhouse nodes to start..."
+    clickhouse01_status=`curl -s http://localhost:8123`
+    clickhouse02_status=`curl -s http://localhost:8124`
+    if [ "$clickhouse01_status" == "Ok." ] && [ "$clickhouse02_status" == "Ok." ]; then
+       echo "  Clickhouse nodes are started and ready"
+       CLICKHOUSE_STARTED=true
+    fi
+    sleep 5
+done
 
