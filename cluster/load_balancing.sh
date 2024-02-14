@@ -89,21 +89,25 @@ INSERT INTO db1.dist_table VALUES('2020-01-09 10:00:00', 900, 'view');
 sleep 3
 echo " query table 1"
 docker exec -it clickhouse01 clickhouse-client -h localhost -nm -q "
-set send_logs_level = 'trace';
-select * from db1.dist_table;
+select * from db1.dist_table settings send_logs_level = 'trace', load_balancing = 'round_robin', prefer_localhost_replica = '0';
 "
 
 echo
 echo
 echo " query table 2"
 docker exec -it clickhouse01 clickhouse-client -h localhost -nm -q "
-set send_logs_level = 'trace';
-select * from db1.dist_table;
+select * from db1.dist_table settings send_logs_level = 'trace', load_balancing = 'round_robin', prefer_localhost_replica = '0';
 "
 echo
 echo
 echo " query table 3"
 docker exec -it clickhouse01 clickhouse-client -h localhost -nm -q "
-set send_logs_level = 'trace';
-select * from db1.dist_table;
+select * from db1.dist_table settings send_logs_level = 'trace', load_balancing = 'round_robin', prefer_localhost_replica = '0' ;
+"
+
+echo
+echo 
+echo " * Show settings for the query" 
+docker exec -it clickhouse01 clickhouse-client -h localhost -nm -q "
+select Settings from clusterAllReplicas('cluster_$(echo $num_of_shards)S_$(echo $num_of_replicas)R', system.query_log) where query ilike 'select * from db1.dist_table%' and type = 'QueryFinish';
 "
