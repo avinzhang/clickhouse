@@ -90,5 +90,7 @@ services:
       - "GF_INSTALL_PLUGINS=https://github.com/grafana/clickhouse-datasource/releases/download/v4.0.2/grafana-clickhouse-datasource-4.0.2.linux_arm64.zip;grafana-clickhouse-datasource"
     ports:
       - 3000:3000
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
     networks:
       example.com: {}
