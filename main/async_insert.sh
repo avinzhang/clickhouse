@@ -1,3 +1,18 @@
+#!/bin/bash
+
+
+clickhouse client --host f5mjw0j8n6.ap-southeast-2.aws.clickhouse.cloud --secure --password $CC_PROD_PASS -mn -q "
+create or replace table test
+(
+  time DateTime,
+  number Int32,
+  string String
+)
+Engine = MergeTree()
+Primary Key time;
+"
+
+
 #date
 StartDate=`date +%s`
 #seq 1 1500 | xargs -I $ -n1 -P10 curl -u default:"$CC_PROD_PASS" -sS "https://f5mjw0j8n6.ap-southeast-2.aws.clickhouse.cloud:8443" -d '
