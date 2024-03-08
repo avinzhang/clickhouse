@@ -1,0 +1,22 @@
+---
+version: '3.8'
+networks:
+  example.com:
+    name: "example.com"
+    driver: bridge
+services:
+  grafana:
+    image: grafana/grafana:10.3.1
+    container_name: grafana
+    hostname: grafana
+    environment:
+      - "GF_SECURITY_ADMIN_USER=admin"
+      - "GF_SECURITY_ADMIN_PASSWORD=admin"
+      - "GF_USERS_ALLOW_SIGN_UP=false"
+      - "GF_INSTALL_PLUGINS=https://github.com/grafana/clickhouse-datasource/releases/download/v4.0.2/grafana-clickhouse-datasource-4.0.2.linux_arm64.zip;grafana-clickhouse-datasource"
+    ports:
+      - 3000:3000
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      example.com: {}

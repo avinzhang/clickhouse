@@ -1,0 +1,21 @@
+---
+version: '3.8'
+networks:
+  example.com:
+    name: "example.com"
+    driver: bridge
+services:
+  postgres:
+    image: postgres:13
+    hostname: postgres
+    container_name: postgres
+    ports:
+     - "5432:5432"
+    environment:
+    - POSTGRES_USER=postgres
+    - POSTGRES_PASSWORD=postgres
+    command: [ "postgres", "-c", "wal_level=logical" ]
+    volumes:
+     - ./postgres:/docker-entrypoint-initdb.d
+    networks:
+      example.com: {}
