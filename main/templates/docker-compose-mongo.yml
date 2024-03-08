@@ -1,0 +1,21 @@
+---
+version: '3.8'
+networks:
+  example.com:
+    name: "example.com"
+    driver: bridge
+services:
+  mongo:
+    image: mongo:5.0.25
+    hostname: mongo
+    container_name: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpass
+    ports:
+      - 27017:27017
+    volumes:
+      - ./mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      example.com: {}
