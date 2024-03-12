@@ -111,3 +111,24 @@ ORDER BY
     modification_time_m ASC,
     table DESC
     ```
+
+* Mutations
+  ```
+  SELECT database, table, command, create_time, parts_to_do_names,parts_to_do, latest_fail_reason
+ FROM clusterAllReplicas('default', system.mutations) WHERE is_done=0
+ ```
+
+* Work out merge ETA
+  ```
+  SELECT
+    hostName(),
+    database,
+    table,
+    round(elapsed, 0) AS time,
+    round(progress, 4) AS percent,
+    formatReadableTimeDelta((elapsed / progress) - elapsed) AS ETA,
+    num_parts,
+    result_part_name
+  FROM clusterAllReplicas(default, system.merges) WHERE (table = '') 
+  ORDER BY (elapsed / percent) - elapsed ASC;
+  ```
