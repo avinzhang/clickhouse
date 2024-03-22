@@ -87,7 +87,7 @@ def create_ch_config(num_of_shards, num_of_replicas, config_template):
     node_id+=1
 
 
-def create_docker_compose(num_of_shards, num_of_replicas, num_of_keepers, dc_template):
+def create_docker_compose(num_of_shards, num_of_replicas, num_of_keepers, dc_extra, ch_version):
   with open(f'./templates/docker-compose.yml','r') as f: 
     data = yaml.safe_load(f)
 
@@ -119,6 +119,7 @@ def create_docker_compose(num_of_shards, num_of_replicas, num_of_keepers, dc_tem
     
   clickhouse_tmp = data['services']['clickhouse']
   for clickhouse_id in range(num_of_shards * num_of_replicas):
+    clickhouse_tmp['image'] = 'clickhouse/clickhouse-server:'+ch_version
     clickhouse_tmp['ports'] = ([str(9001 + clickhouse_id) +':9000', str(8123 + clickhouse_id) + ':8123'])
     clickhouse_tmp['hostname'] = 'clickhouse0'+str(clickhouse_id+1)
     clickhouse_tmp['container_name'] = 'clickhouse0'+str(clickhouse_id+1)
@@ -131,10 +132,12 @@ def create_docker_compose(num_of_shards, num_of_replicas, num_of_keepers, dc_tem
     with open(f'./templates/docker-compose.yml','r') as f:
       data = yaml.safe_load(f)
     clickhouse_tmp = data['services']['clickhouse']
-  with open(f'./templates/'+dc_template,'r') as f:
-    data = yaml.safe_load(f)
-  other_services = data['services']
-  services_all = services_all | other_services
+  #Add extra services
+  if dc_extra != 'docker-compose.yml':
+    with open(f'./templates/'+dc_extra,'r') as f:
+      data_extra = yaml.safe_load(f)
+    other_services = data_extra['services']
+    services_all = services_all | other_services
   services_tmp = {'services': services_all}
   with open(f'docker-compose.yml', 'a') as f:
     yaml.dump(services_tmp,f,sort_keys=False)
@@ -147,12 +150,13 @@ def create_docker_compose(num_of_shards, num_of_replicas, num_of_keepers, dc_tem
 @click.option("-s", "--num_of_shards", default=1, help="Number of shards to create. Default is 1")
 @click.option("-r", "--num_of_replicas", default=2, help="Number of replicas to create. Default is 2")
 @click.option("-k", "--num_of_keepers", default=3, help="Number of keepers to create. Default is 3")
-@click.option("-t", "--name_of_dc", default="docker-compose.yml", help="Name of the docker compose template to use. Default is docker-compose.yml")
+@click.option("-t", "--dc_extra", default="docker-compose.yml", help="Name of the docker compose template to use. Default is docker-compose.yml")
 @click.option("-c", "--config_template", default="config.xml", help="Name of the clickhouse config to use. Default is config.xml")
-def create_all_configs(num_of_shards, num_of_replicas, num_of_keepers, name_of_dc, config_template):
+@click.option("-v", "--ch_version", default="latest", help="Version of the clickhouse to use. ")
+def create_all_configs(num_of_shards, num_of_replicas, num_of_keepers, dc_extra, config_template, ch_version):
   create_ch_config(num_of_shards, num_of_replicas, config_template)
   create_keeper_config(num_of_keepers)
-  create_docker_compose(num_of_shards, num_of_replicas, num_of_keepers, name_of_dc)
+  create_docker_compose(num_of_shards, num_of_replicas, num_of_keepers, dc_extra, ch_version)
   
 
 if __name__ == "__main__":
