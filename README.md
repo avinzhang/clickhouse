@@ -156,3 +156,10 @@ ORDER BY
   ORDER BY ts
   FORMAT PrettyCompactMonoBlock;
   ```
+
+* Find Clickhouse build version from system tables
+  ```
+  SELECT *
+  FROM system.build_options
+  WHERE name ILIKE '%version%'
+  ```
