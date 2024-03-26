@@ -132,3 +132,27 @@ ORDER BY
   FROM clusterAllReplicas(default, system.merges) WHERE (table = '') 
   ORDER BY (elapsed / percent) - elapsed ASC;
   ```
+
+* Count different type of queries 
+  ```
+  SELECT
+    toStartOfHour(event_time) AS ts,
+    countIf(1, query_kind = 'Insert') AS Insert,
+    countIf(1, query_kind = 'AsyncInsertFlush') AS AsyncInsertFlush,
+    countIf(1, query_kind = 'Select') AS Select,
+    countIf(1, query_kind = 'KillQuery') AS KillQuery,
+    countIf(1, query_kind = 'System') AS System,
+    countIf(1, query_kind = 'Create') AS Create,
+    countIf(1, query_kind = 'Show') AS Show,
+    countIf(1, query_kind = 'Drop') AS Drop,
+    countIf(1, query_kind = 'Backup') AS Backup,
+    countIf(1, query_kind = 'Alter') AS Alter,
+    countIf(1, query_kind = 'Describe') AS Describe,
+    countIf(1, query_kind = 'Delete') AS Delete,
+    countIf(1, query_kind = 'Explain') AS Explain
+  FROM clusterAllReplicas(default, system.query_log)
+  WHERE event_time between now() - interval 1 day and now()
+  GROUP BY ts
+  ORDER BY ts
+  FORMAT PrettyCompactMonoBlock;
+  ```
