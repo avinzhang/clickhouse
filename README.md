@@ -94,6 +94,7 @@
       partition
   ORDER BY part_count DESC;
   ```
+
 * See list of new parts created in the last 2 hours
   ```
   SELECT
@@ -102,21 +103,21 @@
     table,
     sum(rows) AS total_written_rows,
     formatReadableSize(sum(size_in_bytes)) AS total_bytes_on_disk
-FROM clusterAllReplicas(default, system.part_log)
-WHERE (event_type = 'NewPart') AND (event_time > (now() - toIntervalHour(2)))
-GROUP BY
-    modification_time_m,
-    table
-ORDER BY
-    modification_time_m ASC,
-    table DESC
+  FROM clusterAllReplicas(default, system.part_log)
+  WHERE (event_type = 'NewPart') AND (event_time > (now() - toIntervalHour(2)))
+  GROUP BY
+      modification_time_m,
+      table
+  ORDER BY
+      modification_time_m ASC,
+      table DESC
     ```
 
 * Mutations
   ```
   SELECT database, table, command, create_time, parts_to_do_names,parts_to_do, latest_fail_reason
- FROM clusterAllReplicas('default', system.mutations) WHERE is_done=0
- ```
+  FROM clusterAllReplicas('default', system.mutations) WHERE is_done=0
+  ```
 
 * Work out merge ETA
   ```
