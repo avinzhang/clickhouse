@@ -11,6 +11,17 @@ terraform {
 provider "aws" {
   region  = "ap-southeast-2"
 }
+
+
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+locals {
+  region = "ap-southeast-2"
+  availability_zones = sort(data.aws_availability_zones.available.names)
+}
+
 resource "aws_vpc" "msk-cluster" {
   cidr_block = "192.168.0.0/22"
   enable_dns_hostnames = true
@@ -21,36 +32,54 @@ resource "aws_vpc" "msk-cluster" {
   }
 }
 
+
+
 data "aws_availability_zones" "azs" {
   state = "available"
 }
 
-resource "aws_subnet" "subnet_az1" {
-  availability_zone = data.aws_availability_zones.azs.names[0]
-  cidr_block        = "192.168.0.0/24"
-  vpc_id            = aws_vpc.msk-cluster.id
+resource "aws_subnet" "sn_az" {
+  count = length(local.availability_zones)
+
+  availability_zone = local.availability_zones[count.index]
+
+  vpc_id = aws_vpc.msk-cluster.id
+  map_public_ip_on_launch = true
+
+  cidr_block = cidrsubnet(aws_vpc.msk-cluster.cidr_block, 5, count.index+1)
+
   tags = {
-    "Name"        = "msk-subnet-1"
+    Name = "msk-subnet-${count.index + 1}"
   }
 }
 
-resource "aws_subnet" "subnet_az2" {
-  availability_zone = data.aws_availability_zones.azs.names[1]
-  cidr_block        = "192.168.1.0/24"
-  vpc_id            = aws_vpc.msk-cluster.id
-  tags = {
-    "Name"        = "msk-subnet-2"
-  }
-}
 
-resource "aws_subnet" "subnet_az3" {
-  availability_zone = data.aws_availability_zones.azs.names[2]
-  cidr_block        = "192.168.2.0/24"
-  vpc_id            = aws_vpc.msk-cluster.id
-  tags = {
-    "Name"        = "msk-subnet-3"
-  }
-}
+#resource "aws_subnet" "subnet_az1" {
+#  availability_zone = data.aws_availability_zones.azs.names[0]
+#  cidr_block        = "192.168.0.0/24"
+#  vpc_id            = aws_vpc.msk-cluster.id
+#  tags = {
+#    "Name"        = "msk-subnet-1"
+#  }
+#}
+#
+#resource "aws_subnet" "subnet_az2" {
+#  availability_zone = data.aws_availability_zones.azs.names[1]
+#  cidr_block        = "192.168.1.0/24"
+#  vpc_id            = aws_vpc.msk-cluster.id
+#  tags = {
+#    "Name"        = "msk-subnet-2"
+#  }
+#}
+#
+#resource "aws_subnet" "subnet_az3" {
+#  availability_zone = data.aws_availability_zones.azs.names[2]
+#  cidr_block        = "192.168.2.0/24"
+#  vpc_id            = aws_vpc.msk-cluster.id
+#  tags = {
+#    "Name"        = "msk-subnet-3"
+#  }
+#}
 
 resource "aws_security_group" "sg" {
   vpc_id = aws_vpc.msk-cluster.id
@@ -59,13 +88,25 @@ resource "aws_security_group" "sg" {
     from_port   = 9096
     to_port     = 9096
     protocol    = "TCP"
+    cidr_blocks = ["192.168.0.0/22"]
+  }
+  ingress {
+    from_port   = 9196
+    to_port     = 9196
+    protocol    = "TCP"
+    cidr_blocks = ["0.0.0.0/22"]
+  }
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "TCP"
     cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
-    from_port   = 9092
-    to_port     = 9092
+    from_port   = 2181
+    to_port     = 2181
     protocol    = "TCP"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["192.168.0.0/22"]
   }
   egress {
     from_port   = 0
@@ -88,8 +129,30 @@ resource "aws_route" "to_internet_gateway" {
   gateway_id             = aws_internet_gateway.msk_ig.id
 }
 
+resource "aws_key_pair" "keypair" {
+  key_name   = "avin-tf-sshkey"
+  public_key = file("/Users/avin/.ssh/id_rsa.pub")
+}
+
+
+resource "aws_instance" "instance" {
+  count = 1
+  ami = "ami-0ed8f0ae82f567dc2"
+  instance_type = "t2.micro"
+  key_name = "${aws_key_pair.keypair.key_name}"
+  associate_public_ip_address = true
+  subnet_id = element(aws_subnet.sn_az.*.id, count.index)
+  vpc_security_group_ids      = [aws_security_group.sg.id]
+
+  tags = {
+    Name = "avin-terraform-${count.index + 1}"
+  }
+}
+
+
 resource "aws_kms_key" "kms" {
   description = "example"
+  deletion_window_in_days = 7
 }
 
 resource "aws_msk_configuration" "kafka_config" {
@@ -109,11 +172,7 @@ resource "aws_msk_cluster" "msk_cluster" {
 
   broker_node_group_info {
     az_distribution = "DEFAULT"
-    client_subnets  = [
-      aws_subnet.subnet_az1.id,
-      aws_subnet.subnet_az2.id,
-      aws_subnet.subnet_az3.id,
-    ]
+    client_subnets  = aws_subnet.sn_az[*].id
     connectivity_info {
       public_access {
         #type = "DISABLED"
@@ -158,6 +217,7 @@ resource "aws_msk_cluster" "msk_cluster" {
 
 resource "aws_secretsmanager_secret" "msk-secret" {
   name       = "AmazonMSK_logins"
+  recovery_window_in_days = 0 
   kms_key_id = aws_kms_key.kms.key_id
 }
 
@@ -199,3 +259,6 @@ output "bootstrap_brokers_sasl_scram" {
   description = "sasl_scram connection string (host:port pairs)"
 }
 
+output "ec2-ip" {
+  value = "${aws_instance.instance[0].public_ip}"
+}
