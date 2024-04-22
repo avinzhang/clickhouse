@@ -95,9 +95,6 @@ def create_docker_compose(num_of_shards, num_of_replicas, num_of_keepers, dc_ext
   s = "---\n"
   composefile.write(s)
   composefile.close()
-  version_tmp = {'version': data['version']}
-  with open(f'docker-compose.yml', 'a') as file:
-      yaml.dump(version_tmp,file,sort_keys=False)
   network_tmp = {'networks': data['networks']}
   with open(f'docker-compose.yml', 'a') as file:
       yaml.dump(network_tmp,file,sort_keys=False)
