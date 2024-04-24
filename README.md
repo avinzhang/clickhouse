@@ -179,3 +179,16 @@
   ORDER BY memory_usage DESC
   LIMIT 10
   ```
+
+* Get queries with count for each query
+  ```
+  select 
+    tables, 
+    count() 
+  from clusterAllReplicas(default, system.query_log) 
+  where query ilike '%final%' 
+    and type = 'QueryFinish' 
+    and query_kind = 'Select' 
+    and event_date = today() 
+  group by all order by count() desc limit 1000 format PrettyCompactMonoBlock
+  ```
