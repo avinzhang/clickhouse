@@ -192,3 +192,13 @@
     and event_date = today() 
   group by all order by count() desc limit 1000 format PrettyCompactMonoBlock
   ```
+
+* Total number of connections for each node
+  ```
+  SELECT
+    hostname() AS server,
+    sum(value)
+  FROM clusterAllReplicas(default, system.metrics)
+  WHERE metric LIKE '%Connection'
+  GROUP BY server
+  ```
