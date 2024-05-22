@@ -57,3 +57,14 @@ SELECT
 FROM system.parts
 WHERE active AND (table LIKE 'visits_order')
 GROUP BY table
+
+
+
+# insert unique user_name
+INSERT INTO visits_order
+SELECT
+    number AS user_id,
+    concat('user_', toString(rand() % 20)) AS user_name,
+    if((number % 2) = 0, NULL, (rand() % 1000) / 10.0) AS pages_visited,
+    ['Android', 'iOS', 'Windows', 'Linux'][rand() % 4] AS user_agent
+FROM numbers(300000000);
