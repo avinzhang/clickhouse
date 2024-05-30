@@ -32,9 +32,9 @@ KEEPERS_STARTED=false
 while [ "$KEEPERS_STARTED" = "false" ]
 do
     echo "   Waiting for Keepers to start..."
-    keeper01_status=`docker-compose exec keeper01 bash -c "echo ruok |nc localhost 9181"`
-    keeper02_status=`docker-compose exec keeper02 bash -c "echo ruok |nc localhost 9181"`
-    keeper03_status=`docker-compose exec keeper03 bash -c "echo ruok |nc localhost 9181"`
+    keeper01_status=`echo ruok |nc localhost 9181`
+    keeper02_status=`echo ruok |nc localhost 9182`
+    keeper03_status=`echo ruok |nc localhost 9183`
     if [ "$keeper01_status" = "imok" ] && [ "$keeper02_status" = "imok" ] && [ "$keeper03_status" = "imok" ]; then
        echo "  Keepers are started and ready"
        KEEPERS_STARTED=true
@@ -74,16 +74,19 @@ done
 echo
 echo
 echo "* Create datagen-user connector"
-curl -X POST -H "Content-Type: application/json" http://localhost:8083/connectors/ --data '{"name": "datagen-users", "config": {"connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector", "quickstart": "users", "name": "datagen-users", "kafka.topic": "users", "max.interval": "1000", "key.converter": "org.apache.kafka.connect.storage.StringConverter", "value.converter": "io.confluent.connect.avro.AvroConverter", "tasks.max": "1", "iterations": "1000000000",  "key.converter.schema.registry.url": "http://schemaregistry:8081", "value.converter.schema.registry.url": "http://schemaregistry:8081" }}'
+curl -X POST -H "Content-Type: application/json" http://localhost:8083/connectors/ --data '{"name": "datagen-users", "config": {"connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector", "quickstart": "users", "name": "datagen-users", "kafka.topic": "datagen_users", "max.interval": "1000", "key.converter": "org.apache.kafka.connect.storage.StringConverter", "value.converter": "io.confluent.connect.avro.AvroConverter", "tasks.max": "1", "iterations": "1000000000",  "key.converter.schema.registry.url": "http://schemaregistry:8081", "value.converter.schema.registry.url": "http://schemaregistry:8081" }}'
+curl -X POST -H "Content-Type: application/json" http://localhost:8083/connectors/ --data '{"name": "datagen-pageviews", "config": {"connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector", "quickstart": "pageviews", "name": "datagen-pageviews", "kafka.topic": "datagen_pageviews", "max.interval": "1000", "key.converter": "org.apache.kafka.connect.storage.StringConverter", "value.converter": "io.confluent.connect.avro.AvroConverter", "tasks.max": "1", "iterations": "1000000000",  "key.converter.schema.registry.url": "http://schemaregistry:8081", "value.converter.schema.registry.url": "http://schemaregistry:8081" }}'
 
 sleep 3
-echo "* Check connector status"
+echo "* Check connector datagen-users status"
 echo "  datagen-users:  `curl -s http://localhost:8083/connectors/datagen-users/status | jq .connector.state`"
+echo "* Check connector datagen-pageviews status"
+echo "  datagen-users:  `curl -s http://localhost:8083/connectors/datagen-pageviews/status | jq .connector.state`"
 echo
 echo 
 echo "* Create table in Clickhouse"
-docker exec -it clickhouse01 clickhouse-client -h localhost -q "
-CREATE TABLE users 
+docker exec -it clickhouse01 clickhouse-client -h localhost -mn -q "
+CREATE TABLE datagen_users 
 (
     userid String,
     registertime Int64,
@@ -92,6 +95,8 @@ CREATE TABLE users
 )
 ENGINE = MergeTree
 ORDER BY (userid);
+
+CREATE TABLE datagen_pageviews (viewtime Int64, userid String, pageid String) ENGINE = MergeTree ORDER BY (viewtime);
 "
 echo
 echo "* Create Clickhouse connector": 
@@ -100,12 +105,14 @@ curl -i -X POST \
     -H  "Content-Type:application/json" \
    http://localhost:8083/connectors/ -d '
   {
-      "name": "clickhouse-users",
+      "name": "clickhouse-datagen",
       "config": {
-           "name": "clickhouse-users",
+           "name": "clickhouse-datagen",
            "connector.class": "com.clickhouse.kafka.connect.ClickHouseSinkConnector",
            "database": "default",
-           "topics": "users",
+           "zkDatabase": "keeperdb",
+           "topics.regex": "datagen_.*",
+           "table.name.format": "${topic}",
            "hostname": "clickhouse01",
            "port": "8123",
            "request.method": "POST",
@@ -124,11 +131,12 @@ curl -i -X POST \
 echo
 sleep 3
 echo "* Check clickhouse connector status"
-echo "  Clickhouse:  `curl -s http://localhost:8083/connectors/clickhouse-users/status | jq .connector.state`"
+echo "  Clickhouse:  `curl -s http://localhost:8083/connectors/clickhouse-datagen/status | jq .connector.state`"
 echo
 echo
 echo
 echo "* Select data from users table"
-docker exec -it clickhouse01 clickhouse-client -h localhost -q "
-select count() from users;
+docker exec -it clickhouse01 clickhouse-client -h localhost -mn -q "
+select count() from default.datagen_users;
+select count() from default.datagen_pageviews;
 "
