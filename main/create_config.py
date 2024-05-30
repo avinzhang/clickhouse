@@ -122,6 +122,7 @@ def create_docker_compose(num_of_shards, num_of_replicas, num_of_keepers, dc_ext
     clickhouse_tmp['container_name'] = 'clickhouse0'+str(clickhouse_id+1)
     volume_tmp = (['./config/clickhouse0'+ str(clickhouse_id+1)+':/etc/clickhouse-server/config.d',
     './config/users.xml:/etc/clickhouse-server/users.d/users.xml',
+    './user_files:/usr/lib/clickhouse/user_files',
     './data/clickhouse0'+str(clickhouse_id+1)+':/var/lib/clickhouse',
     './log/clickhouse0'+str(clickhouse_id+1)+':/var/log/clickhouse-server'])
     clickhouse_tmp['volumes'] = volume_tmp
