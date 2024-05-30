@@ -202,3 +202,38 @@
   WHERE metric LIKE '%Connection'
   GROUP BY server
   ```
+
+* Partition content
+  ```
+  SELECT
+    database,
+    `table`,
+    count(*) AS parts,
+    uniq(partition) AS partitions,
+    sum(marks) AS marks,
+    sum(rows) AS rows,
+    formatReadableSize(sum(data_compressed_bytes)) AS compressed,
+    formatReadableSize(sum(data_uncompressed_bytes)) AS uncompressed,
+    round((sum(data_compressed_bytes) / sum(data_uncompressed_bytes)) * 100., 2) AS percentage
+  FROM system.parts
+  WHERE active AND (database = currentDatabase())
+  GROUP BY
+    database,
+    `table`
+  ORDER BY
+    database ASC,
+    `table` ASC
+  ```
+
+* Check data size
+  ```
+  SELECT
+    `table`,
+    formatReadableSize(sum(data_compressed_bytes)) AS compressed,
+    formatReadableSize(sum(data_uncompressed_bytes)) AS uncompressed,
+    sum(data_compressed_bytes) / sum(data_uncompressed_bytes) AS ratio
+  FROM system.columns
+  WHERE database = currentDatabase()
+  GROUP BY `table`
+  ORDER BY `table` ASC
+  ```
