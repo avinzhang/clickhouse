@@ -1,12 +1,12 @@
 ---
-version: '3.8'
+#version: '3.8'
 networks:
   example.com:
     name: "example.com"
     driver: bridge
 services:
   keeper:
-    image: clickhouse/clickhouse-keeper:23.12.5.81
+    image: clickhouse/clickhouse-keeper:latest
     ports:
       - "9181:9181"  
     container_name: keeper
@@ -19,10 +19,10 @@ services:
       - ./log/keeper:/var/log/clickhouse-keeper
 
   clickhouse:
-    image: clickhouse/clickhouse-server:24.2.2.71
+    image: clickhouse/clickhouse-server:latest
     hostname: clickhouse
     container_name: clickhouse
-    cpus: 0.7
+    cpus: 2
     ulimits:
       nofile:
         soft: 262144
@@ -37,4 +37,5 @@ services:
       - ./config/users.xml:/etc/clickhouse-server/users.d/users.xml
       - ./data/clickhouse:/var/lib/clickhouse
       - ./log/clickhouse:/var/log/clickhouse-server
+      - ./user_files:/var/lib/clickhouse/user_files
 
