@@ -2,7 +2,8 @@
 
 num_of_shards=1
 num_of_replicas=2
-python3 create_config.py -s $num_of_shards -r $num_of_replicas
+version=latest
+python3 create_config.py -s $num_of_shards -r $num_of_replicas -v $version
 num_of_nodes=$((num_of_shards * num_of_replicas))
 ch_nodes=""
 i=1
