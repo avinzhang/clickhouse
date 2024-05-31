@@ -237,3 +237,13 @@
   GROUP BY `table`
   ORDER BY `table` ASC
   ```
+
+* Check Node restart
+  ```
+  SELECT
+    event_time,
+    message
+    FROM clusterAllReplicas(default, system.text_log)
+  WHERE (thread_name = 'clickhouse-serv') AND (logger_name = 'Application') AND (event_time > '2024-05-30 21:30') AND ((message LIKE '%Shutting%') OR (message LIKE '%Starting%'))
+  ORDER BY event_time DESC
+  ```
