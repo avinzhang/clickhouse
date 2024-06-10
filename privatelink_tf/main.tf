@@ -34,7 +34,7 @@ resource "aws_vpc" "myvpc" {
   enable_dns_support   = true
   instance_tenancy     = "default"
   tags = {
-    "Name"        = "${name}-vpc"
+    "Name"        = "${var.name}-vpc"
   }
 }
 
@@ -55,13 +55,13 @@ resource "aws_subnet" "sn_az" {
   cidr_block = cidrsubnet(aws_vpc.myvpc.cidr_block, 5, count.index+1)
 
   tags = {
-    Name = "${name}-subnet-${count.index + 1}"
+    Name = "${var.name}-subnet-${count.index + 1}"
   }
 }
 
 resource "aws_security_group" "sg" {
   vpc_id = aws_vpc.myvpc.id
-  name   = "${name}-sg"
+  name   = "${var.name}-sg"
   ingress {
     from_port   = 22
     to_port     = 22
@@ -91,7 +91,7 @@ resource "aws_security_group" "sg" {
 resource "aws_internet_gateway" "avin_ig" {
   vpc_id = aws_vpc.myvpc.id
   tags = {
-    "Name"        = "${name}-internet-gateway"
+    "Name"        = "${var.name}-internet-gateway"
   }
 }
 
@@ -102,7 +102,7 @@ resource "aws_route" "to_internet_gateway" {
 }
 
 resource "aws_key_pair" "keypair" {
-  key_name   = "${name}-tf-sshkey"
+  key_name   = "${var.name}-tf-sshkey"
   public_key = file("/Users/avin/.ssh/id_rsa.pub")
 }
 
@@ -117,7 +117,7 @@ resource "aws_instance" "instance" {
   vpc_security_group_ids      = [aws_security_group.sg.id]
 
   tags = {
-    Name = "${name}-terraform-${count.index + 1}"
+    Name = "${var.name}-terraform-${count.index + 1}"
   }
 }
 
