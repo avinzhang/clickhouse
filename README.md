@@ -247,3 +247,34 @@
   WHERE (thread_name = 'clickhouse-serv') AND (logger_name = 'Application') AND (event_time > '2024-05-30 21:30') AND ((message LIKE '%Shutting%') OR (message LIKE '%Starting%'))
   ORDER BY event_time DESC
   ```
+
+* Clickhouse load analysis 
+  ```
+  SELECT
+    toStartOfHour(event_time) AS ts,
+    countDistinct(normalized_query_hash) AS unique_query,
+    count() AS query_count,
+    round(query_count / 3600) AS qps,
+    min(query_duration_ms) AS duration_min,
+    round(quantile(0.5)(query_duration_ms)) AS duration_p50,
+    round(quantile(0.9)(query_duration_ms)) AS duration_p90,
+    max(query_duration_ms) AS duration_max,
+    formatReadableSize(min(memory_usage)) AS mem_min,
+    formatReadableSize(quantile(0.5)(memory_usage)) AS mem_p50,
+    formatReadableSize(quantile(0.9)(memory_usage)) AS mem_p90,
+    formatReadableSize(max(memory_usage)) AS mem_max,
+    min(ProfileEvents['OSCPUVirtualTimeMicroseconds']) AS cpu_min,
+    round(quantile(0.5)(ProfileEvents['OSCPUVirtualTimeMicroseconds'])) AS cpu_p50,
+    round(quantile(0.9)(ProfileEvents['OSCPUVirtualTimeMicroseconds'])) AS cpu_p90,
+    max(ProfileEvents['OSCPUVirtualTimeMicroseconds']) AS cpu_max,
+    min(ProfileEvents['OSCPUWaitMicroseconds']) AS cpu_wait_min,
+    round(quantile(0.5)(ProfileEvents['OSCPUWaitMicroseconds'])) AS cpu_wait_p50,
+    round(quantile(0.9)(ProfileEvents['OSCPUWaitMicroseconds'])) AS cpu_wait_p90,
+    max(ProfileEvents['OSCPUWaitMicroseconds']) AS cpu_wait_max
+    FROM clusterAllReplicas(default, system.query_log)
+    WHERE (type = 'QueryFinish') AND (query_kind = 'Select') AND ((event_time >= (now() - toIntervalDay(7))) AND (event_time <= now())) AND (user NOT ILIKE '%internal%')
+    GROUP BY ALL
+        WITH TOTALS
+    ORDER BY ts ASC
+    SETTINGS skip_unavailable_shards = 1
+  ```
