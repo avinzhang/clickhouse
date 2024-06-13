@@ -171,3 +171,24 @@ resource "clickhouse_private_endpoint_registration" "private_endpoint_aws" {
   description    = "Private Link from VPC"
 }
 
+variable "svc_id" {
+  type = string
+}
+
+resource "null_resource" "endpointConfig" {
+  triggers = {
+    always_run = timestamp()
+  }
+  provisioner "local-exec" {
+    command = "curl -s https://${var.token_key}:${var.token_secret}@api.clickhouse.cloud/v1/organizations/${var.organization_id}/services/${var.svc_id}/privateEndpointConfig | cut -d',' -f2 |cut -d'}' -f1 > /tmp/endpoint.txt"
+  }
+}
+
+data "local_file" "endpointC" {
+    filename = "/tmp/endpoint.txt"
+  depends_on = [null_resource.endpointConfig]
+}
+
+output "privateEndpoint" {
+  value = data.local_file.endpointC.content
+}
