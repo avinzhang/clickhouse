@@ -278,3 +278,22 @@
     ORDER BY ts ASC
     SETTINGS skip_unavailable_shards = 1
   ```
+
+* Avg insert row per insert
+  ```
+  SELECT
+    toStartOfHour(event_time) AS event_time_,
+    count() AS queries,
+    countIf(exception != '') AS succ_queries,
+    avgIf(assumeNotNull(written_rows), (type = 'QueryFinish') AND (exception = '')) AS avg_rows_per_insert
+    FROM clusterAllReplicas('default', system.query_log)
+    WHERE (event_time > (now() - toIntervalHour(10))) AND (query = (
+        SELECT query
+        FROM clusterAllReplicas('default', system.query_log)
+        WHERE (query_id = 'f92fb485-c90a-4138-8a1d-97bfe2174816') AND (event_time > (now() - toIntervalHour(5)))
+        LIMIT 1
+    ))
+    GROUP BY event_time_
+    ORDER BY event_time_ ASC
+    FORMAT PrettyCompactMonoBlock
+  ```
