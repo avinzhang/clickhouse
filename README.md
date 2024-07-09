@@ -297,3 +297,15 @@
     ORDER BY event_time_ ASC
     FORMAT PrettyCompactMonoBlock
   ```
+
+* Analyse errors in query log
+  ```
+  SELECT
+    toStartOfHour(event_time) AS event_time_,
+    exception_code,
+    count() AS error_count
+    FROM clusterAllReplicas('default', system.query_log)
+  WHERE (event_time > (now() - toIntervalHour(48))) and exception != ''
+  GROUP BY event_time_, exception_code order by event_time_, exception_code
+  FORMAT PrettyCompactMonoBlock;
+  ```
