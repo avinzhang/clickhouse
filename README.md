@@ -366,3 +366,8 @@
   LIMIT 100
   FORMAT Vertical
   ```
+
+* Get all running queries
+  ```
+  select * from system.processes format Vertical
+  ```
