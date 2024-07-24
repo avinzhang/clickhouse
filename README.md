@@ -85,6 +85,11 @@
       memory DESC;
   ```
 
+* Memory usaged by current processes
+  ```
+  SELECT formatReadableSize(sum(memory_usage)) FROM system.processes;
+  ```
+
 * Analyse slow query
   ```
   select 
@@ -332,4 +337,32 @@
   WHERE (event_time > (now() - toIntervalHour(48))) and exception != ''
   GROUP BY event_time_, exception_code order by event_time_, exception_code
   FORMAT PrettyCompactMonoBlock;
+  ```
+
+* Query performance over time
+  ```
+  SELECT
+    normalized_query_hash,
+    sum(c) AS cnt,
+    median(q),
+    sparkbar(100)(time, q),
+    sparkbar(100)(time, c),
+    any(substring(query, 1, 100))
+  FROM
+  (
+        SELECT
+            toStartOfInterval(event_time, INTERVAL 10 MINUTE) AS time,
+            normalized_query_hash,
+            count() AS c,
+            quantileTiming(0.9)(query_duration_ms) AS q,
+            replaceRegexpAll(any(query), '\s+', ' ') AS query
+        FROM clusterAllReplicas(default, system.query_log)
+        WHERE event_date >= today() - 2 AND user NOT IN ('monitoring-internal', 'operator-internal')
+        GROUP BY ALL
+  )
+  GROUP BY normalized_query_hash
+  HAVING median(q) > 5
+  ORDER BY cnt DESC
+  LIMIT 100
+  FORMAT Vertical
   ```
